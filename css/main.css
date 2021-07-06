@@ -1,0 +1,33 @@
+html {
+	box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+	box-sizing: inherit;
+}
+
+body {
+	font-family: 'Open Sans', sans-serif;
+	font-size: 1rem;
+}
+
+button {
+	cursor: pointer;
+}
+
+#root {
+	padding: 1.25rem;
+}
+
+.card {
+	background-color: #eee;
+	border: 1px solid black;
+	border-radius: 6px;
+	margin: 8px;
+	padding: 6px;
+}
+.card.is-active {
+	background-color: #ade6c6;
+}
