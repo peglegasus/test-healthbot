@@ -7,41 +7,46 @@ $(document).ready(() => {
 
 	// The root element we will put most of our magic in
 	const $root = $(`#root`);
+	let stepCount = 0;
 
+	// Ajax call to the coreWrapper to grab the json
 	const coreWrapper = $.ajax({
 		url: './js/core_wrapper.json',
 		dataType: 'json',
-		success: (data) => {
+		success: (response) => {
 			console.log('Retrieved Core Wrapper');
 		},
 		error: (err) => {
 			console.log('Error retrieving Core Wrapper. Error = ' , err);
 		}
 	});
+	// Ajax call to the coreProtocol to grab the json
 	const coreProtocol = $.ajax({
 		url: './js/core_protocol.json',
 		dataType: 'json',
-		success: (data) => {
+		success: (response) => {
 			console.log('Retrieved Core Protocol');
 		},
 		error: (err) => {
 			console.log('Error retrieving Core Protocol. Error = ' , err);
 		}
 	});
+	// Ajax call to the customLocalizedStrings to grab the json
 	const customLocalizedStrings = $.ajax({
 		url: './js/localization.json',
 		dataType: 'json',
-		success: (data) => {
+		success: (response) => {
 			console.log('Retrieved Localizaion');
 		},
 		error: (err) => {
 			console.log('Error retrieving Localizaion. Error = ' , err);
 		}
 	});
+	// Ajax call to the customLocalizedStrings to grab the json
 	const questionsAndAnswers = $.ajax({
 		url: './js/questions_and_answers.json',
 		dataType: 'json',
-		success: (data) => {
+		success: (response) => {
 			console.log('Retrieved Questions And Answers');
 		},
 		error: (err) => {
@@ -49,129 +54,70 @@ $(document).ready(() => {
 		}
 	});
 
+	// Async requests
 	$.when(coreWrapper, coreProtocol, customLocalizedStrings, questionsAndAnswers).done(() => {
-		window.scenario = {};
-		scenario['lang'] = 'en-us';
+		window.scenario = window.scenario || {};
 
-		if (coreWrapper.statusText === 'OK') scenario['coreWrapper'] = coreWrapper.responseJSON;
-		if (coreProtocol.statusText === 'OK') scenario['coreProtocol'] = coreProtocol.responseJSON;
-		if (customLocalizedStrings.statusText === 'OK') scenario['customLocalizedStrings'] = customLocalizedStrings.responseJSON;
-		if (questionsAndAnswers.statusText === 'OK') scenario['qNa'] = questionsAndAnswers.responseJSON;
+		if (
+			coreWrapper.statusText === 'OK' &&
+			coreProtocol.statusText === 'OK' &&
+			customLocalizedStrings.statusText === 'OK' &&
+			questionsAndAnswers.statusText === 'OK'
+		) {
+			scenario['lang'] = 'en-us';
+			scenario['coreWrapper'] = coreWrapper.responseJSON;
+			scenario['coreProtocol'] = coreProtocol.responseJSON;
+			scenario['customLocalizedStrings'] = customLocalizedStrings.responseJSON;
+			scenario['qNa'] = questionsAndAnswers.responseJSON;
 
-		initHealthBot();
+			initHealthBot(scenario.coreWrapper);
+		}
 	});
 
-	// // Async ajax call to our JSON architecture
-	// $.ajax({
-	// 	type: 'get',
-	// 	url: './js/core_wrapper.json',
-	// 	dataType: 'json',
-	// 	success: (data) => {
-	// 		console.log('Core Wrapper retrieved...');
-
-	// 		// If our data is a string, we need to parse it something JS can understand
-	// 		if (typeof data === 'string') {
-	// 			console.log('Core Wrapper is string. Converting parsing...');
-	// 			JSON.parse(data);
-	// 		}
-
-	// 		scenario.core = data;
-
-	// 		$.ajax({
-	// 			type: 'get',
-	// 			url: './js/localization.json',
-	// 			dataType: 'json',
-	// 			success: (data) => {
-	// 				console.log('Localized Messages retrieved...');
-
-	// 				// If our data is a string, we need to parse it something JS can understand
-	// 				if (typeof data === 'string') {
-	// 					console.log('Localized Messages is string. Converting parsing...');
-	// 					JSON.parse(data);
-	// 				}
-
-	// 				scenario.customLocalizedStrings = data;
-
-	// 				$.ajax({
-	// 					type: 'get',
-	// 					url: './js/questions_answers.json',
-	// 					dataType: 'json',
-	// 					success: (data) => {
-	// 						console.log('Questions and Answers retrieved...');
-		
-	// 						// If our data is a string, we need to parse it something JS can understand
-	// 						if (typeof data === 'string') {
-	// 							console.log('Questions and Answers is string. Converting parsing...');
-	// 							JSON.parse(data);
-	// 						}
-		
-	// 						scenario.qNa = data;
-		
-	// 						initHealthBot();
-	// 					},
-	// 					error: (err) => {
-	// 						console.log('Error retrieving Questions and Answers.' , err);
-	// 					}
-	// 				});
-	// 			},
-	// 			error: (err) => {
-	// 				console.log('Error retrieving Localized Messages.' , err);
-	// 			}
-	// 		});
-	// 	},
-	// 	// On error
-	// 	error: (err) => {
-	// 		console.log('Error retrieving Core Protocol.', err);
-	// 	}
-	// });
-
-	function initHealthBot() {
+	function initHealthBot(startingObj) {
 		console.log('HealthBot initialized...');
+
+		scenario['scope'] = startingObj;
 
 		// Clear root container
 		// This will remove the loader too
 		$root.html('');
 
-		scenario['scope'] = 'coreWrapper';
-
 		// Hit the first step
 		console.log('Starting HealthBot steps...');
-		initNextCard(scenario.coreWrapper.steps[0]);
+
+		initNextCard(scenario.scope.steps[0]);
 	}
 
 	/* 
 		Initializes the next card (step)
 		Takes 2 params:
 			1) Takes an the next targets' stored object
+			2) Data we want to pass back and do some calculations
 			2) An optional callback so we know when initialization is complete
 	*/ 
 	function initNextCard(card, callback) {
-		const steps = scenario[scenario.scope].steps;
+		const steps = scenario.scope.steps;
+
+		const nextCard = steps.filter(step => step.id === card.designer.next)[0];
+		scenario['nextCard'] = nextCard;
 
 		const $card = $(`<div class="card" data-id="${card.id}" data-type="${card.type}"></div>`);
 
 		$card.append(`<p><strong>Type:</strong> ${card.type}</p>`);
-		$card.append(`<p><strong>Current ID:</strong> ${card.id}</p>`);
-		$card.append(`<p><strong>Next ID:</strong> ${card.designer.next}</p>`);
+		$card.append(`<p><small><strong>Current ID:</strong> ${card.id} | <strong>Next ID:</strong> ${card.designer.next}</small></p>`);
 		$root.find('.card').removeClass('is-active');
 		$card.addClass('is-active');
 		$root.append($card);
 
-		setTimeout(() => {
-			processCurrentCard(card, () => {
-				if (card.designer && card.designer.next) {
-					const nextCard = steps.filter(step => step.id === card.designer.next)[0];
-
-					scenario['nextCard'] = nextCard;
-	
-					if (card.type === 'prompt') return;
-
-					initNextCard(scenario.nextCard, handleScrollToBottom());
-				}
-
-				console.log(`#~~~~~~~~~~~ Completed "${card.type}" card setup...`);
-			});
-		}, 0);
+		// Process the current 
+		processCurrentCard(card, () => {
+			if (card.designer && card.designer.next) {
+				// Don't run next card if prompt
+				if (card.type === 'prompt') return;
+				initNextCard(scenario.nextCard);
+			}
+		});
 
 		// Optional callback
 		// Check if callback exists && check if it's an actual function
@@ -185,9 +131,8 @@ $(document).ready(() => {
 			2) An optional callback so we know when initialization is complete
 	*/
 	function processCurrentCard(card, callback) {
-		console.log(`#~~~~~~~~~~~~~~~~~~~~~~~ Initializing current "${card.type}" card...`, card);
-
-		scenario['currentCard'] = card
+		stepCount += 1;
+		console.log(`# [Step: ${stepCount}]~~~~~~~~~~~~~~~~~~~~~~~ Initializing current "${card.type}" card...`, card);
 
 		switch (card.type) {
 			case 'assignVariable':
@@ -199,7 +144,7 @@ $(document).ready(() => {
 				break;
 
 			case 'branch':
-				console.log('Type: ', card.type);
+				processBranchCard(card);
 				break;
 
 			case 'prompt':
@@ -208,7 +153,7 @@ $(document).ready(() => {
 
 			default:
 				// Default propgations
-				console.log('hello')
+				console.log('Do something default when processing!');
 		}
 
 		// Optional callback
@@ -220,9 +165,19 @@ $(document).ready(() => {
 		console.log(`Processing "${card.type}" card...`);
 
 		// Check if the card needs to 'set' any 'variables' by default
-		if (card && card.operation === 'set') {
-			scenario[card.variable] = card.value;
-		} else if (card && target) {
+		if (card.operation === 'set') {
+
+			scenario[card.variable] = parseInt(card.value);
+
+		} else if (card.operation === 'incrementBy') {
+
+			const val = parseInt(card.value);
+
+			if (!scenario[card.variable]) {
+				scenario[card.variable] = 0;
+			}
+
+			scenario[card.variable] += val;
 
 		}
 	}
@@ -233,7 +188,6 @@ $(document).ready(() => {
 
 		// If our onInit exists
 		if (card.onInit) {
-			console.log('<> card.onInit ', card.onInit)
 			// Split it into an array so we can parse through it
 			let oldInit = card.onInit.split(' ');
 			// Create new empty array to push items to
@@ -277,17 +231,23 @@ $(document).ready(() => {
 			const F = new Function(card.onInit);
 
 			// Initialize the stored string as actual JS
-			return (F());
+			return F();
 		}
+	}
+
+	function processBranchCard(card) {
+		console.log(`Processing "${card.type}" card...`);
 	}
 
 	// Initializes 'type: "prompt"' cards
 	function processPromptCard(card) {
 		console.log(`Processing "${card.type}" card...`);
 
-		const $currentCard = $(`[data-id="${card.id}"]`);
 		const currentText = handleSafelyConvertEval(card.text)[0];
 		const currentPrompt = card.dataType !== 'object' ? handleSafelyConvertEval(card.dataType)[0] : null;
+		
+		let $currentCard = $(`[data-id="${card.id}"]`);
+		$currentCard = $($currentCard[$currentCard.length - 1]);
 
 		// If prompt is a 'choice' type
 		if (card.choiceType === 'choice' && currentPrompt) {
@@ -303,7 +263,7 @@ $(document).ready(() => {
 
 					scenario[card.variable] = parseInt($target.attr('data-index'));
 
-					initNextCard(scenario.nextCard);
+					initNextCard(scenario.nextCard, index);
 				});
 			});
 		} else if (card.attachment && card.attachment[0].type == 'AdaptiveCard') {
