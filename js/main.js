@@ -31,8 +31,8 @@ $(document).ready(() => {
 			console.log('Error retrieving Core Protocol. Error = ' , err);
 		}
 	});
-	// Ajax call to the customLocalizedStrings to grab the json
-	const customLocalizedStrings = $.ajax({
+	// Ajax call to the localization to grab the json
+	const localization = $.ajax({
 		url: './js/localization.json',
 		dataType: 'json',
 		success: (response) => {
@@ -42,8 +42,8 @@ $(document).ready(() => {
 			console.log('Error retrieving Localizaion. Error = ' , err);
 		}
 	});
-	// Ajax call to the customLocalizedStrings to grab the json
-	const questionsAndAnswers = $.ajax({
+	// Ajax call to the localization to grab the json
+	const qNa = $.ajax({
 		url: './js/questions_and_answers.json',
 		dataType: 'json',
 		success: (response) => {
@@ -55,20 +55,20 @@ $(document).ready(() => {
 	});
 
 	// Async requests
-	$.when(coreWrapper, coreProtocol, customLocalizedStrings, questionsAndAnswers).done(() => {
+	$.when(coreWrapper, coreProtocol, localization, qNa).done(() => {
 		window.scenario = window.scenario || {};
 
 		if (
 			coreWrapper.statusText === 'OK' &&
 			coreProtocol.statusText === 'OK' &&
-			customLocalizedStrings.statusText === 'OK' &&
-			questionsAndAnswers.statusText === 'OK'
+			localization.statusText === 'OK' &&
+			qNa.statusText === 'OK'
 		) {
 			scenario['lang'] = 'en-us';
 			scenario['coreWrapper'] = coreWrapper.responseJSON;
 			scenario['coreProtocol'] = coreProtocol.responseJSON;
-			scenario['customLocalizedStrings'] = customLocalizedStrings.responseJSON;
-			scenario['qNa'] = questionsAndAnswers.responseJSON;
+			scenario['localization'] = localization.responseJSON;
+			scenario['qNa'] = qNa.responseJSON;
 
 			initHealthBot(scenario.coreWrapper);
 		}
@@ -86,7 +86,7 @@ $(document).ready(() => {
 		// Hit the first step
 		console.log('Starting HealthBot steps...');
 
-		initNextCard(scenario.scope.steps[0]);
+		initNextStep(scenario.scope.steps[0]);
 	}
 
 	/* 
@@ -96,13 +96,18 @@ $(document).ready(() => {
 			2) Data we want to pass back and do some calculations
 			2) An optional callback so we know when initialization is complete
 	*/ 
-	function initNextCard(card, callback) {
+	function initNextStep(card, callback) {
 		const steps = scenario.scope.steps;
 
+		// Set the current card
+		const currentCard = card;
+		scenario['currentCard'] = currentCard;
+
+		// Set the next card
 		const nextCard = steps.filter(step => step.id === card.designer.next)[0];
 		scenario['nextCard'] = nextCard;
 
-		const $card = $(`<div class="card" data-id="${card.id}" data-type="${card.type}"></div>`);
+		const $card = $(`<div class="card" id="${card.id}" data-type="${card.type}"></div>`);
 
 		$card.append(`<p><strong>Type:</strong> ${card.type}</p>`);
 		$card.append(`<p><small><strong>Current ID:</strong> ${card.id} | <strong>Next ID:</strong> ${card.designer.next}</small></p>`);
@@ -111,11 +116,19 @@ $(document).ready(() => {
 		$root.append($card);
 
 		// Process the current 
-		processCurrentCard(card, () => {
+		initCurrentStep(card, () => {
 			if (card.designer && card.designer.next) {
+
+				// Set the prev card
+				// Set the prev item as the one in the DOM instead
+				// Because there could be multiple reference points in the designer.next value
+				const previousDomItem = $card.prev();
+				const prevCard = steps.filter(step => step.id === previousDomItem.attr('id'))[0];
+				scenario['prevCard'] = prevCard;
+
 				// Don't run next card if prompt
 				if (card.type === 'prompt') return;
-				initNextCard(scenario.nextCard);
+				initNextStep(nextCard);
 			}
 		});
 
@@ -130,7 +143,7 @@ $(document).ready(() => {
 			1) Takes the currentCard's object
 			2) An optional callback so we know when initialization is complete
 	*/
-	function processCurrentCard(card, callback) {
+	function initCurrentStep(card, callback) {
 		stepCount += 1;
 		console.log(`# [Step: ${stepCount}]~~~~~~~~~~~~~~~~~~~~~~~ Initializing current "${card.type}" card...`, card);
 
@@ -209,7 +222,7 @@ $(document).ready(() => {
 
 					// Replace the old string with the new string
 					// This is so we can filter through the localizedStrings to grab the current items
-					let newItemStart = item.replace(/customLocalizedStrings/g, `scenario.customLocalizedStrings.filter(string => string["String ID"] === "${blob}")`);
+					let newItemStart = item.replace(/customLocalizedStrings/g, `scenario.localization.filter(string => string["String ID"] === "${blob}")`);
 
 					// Remove the old blob because at this point we haven't removed it yet
 					newItemStart = newItemStart.replaceAll(`["${blob}"]`, '');
@@ -231,7 +244,7 @@ $(document).ready(() => {
 			const F = new Function(card.onInit);
 
 			// Initialize the stored string as actual JS
-			return F();
+			return (F());
 		}
 	}
 
@@ -243,10 +256,10 @@ $(document).ready(() => {
 	function processPromptCard(card) {
 		console.log(`Processing "${card.type}" card...`);
 
-		const currentText = handleSafelyConvertEval(card.text)[0];
-		const currentPrompt = card.dataType !== 'object' ? handleSafelyConvertEval(card.dataType)[0] : null;
+		const currentText = safelyConvertEval(card.text)[0];
+		const currentPrompt = card.dataType !== 'object' ? safelyConvertEval(card.dataType)[0] : null;
 		
-		let $currentCard = $(`[data-id="${card.id}"]`);
+		let $currentCard = $(`[id="${card.id}"]`);
 		$currentCard = $($currentCard[$currentCard.length - 1]);
 
 		// If prompt is a 'choice' type
@@ -263,7 +276,7 @@ $(document).ready(() => {
 
 					scenario[card.variable] = parseInt($target.attr('data-index'));
 
-					initNextCard(scenario.nextCard, index);
+					initNextStep(scenario.nextCard, index);
 				});
 			});
 		} else if (card.attachment && card.attachment[0].type == 'AdaptiveCard') {
@@ -277,7 +290,7 @@ $(document).ready(() => {
 	// Takes the attachment object as a param that lices inside type="AdaptiveCard" types
 	function processAdaptiveCard(attachment) {
 		// Convert attachment to code
-		const cardCode = handleSafelyConvertEval(attachment[0].cardCode);
+		const cardCode = safelyConvertEval(attachment[0].cardCode);
 		const cardType = cardCode.body[0].type;
 		const cardStyle = cardCode.body[0].style;
 
@@ -330,8 +343,6 @@ $(document).ready(() => {
 			]
 		}
 
-		console.log(newAdaptiveCard)
-
 		// Create a AdaptiveCard instance
 		const adaptiveCard = new AdaptiveCards.AdaptiveCard();
 
@@ -345,7 +356,7 @@ $(document).ready(() => {
 		// Set the adaptive card's event handlers. onExecuteAction is invoked
 		// whenever an action is clicked in the card
 		adaptiveCard.onExecuteAction = function(action) {
-			initNextCard(scenario.nextCard);
+			initNextStep(scenario.nextCard);
 		}
 
 		// Parse the card payload
@@ -359,8 +370,10 @@ $(document).ready(() => {
 		return renderedCard
 	}
 
-	function handleSafelyConvertEval(str) {
-		return Function(`'use strict'; return (${str})`)();
+	function safelyConvertEval(str) {
+		return Function(
+			`'use strict'; return (${str})`
+		)();
 	}
 
 	function handleScrollToBottom() {
@@ -446,7 +459,7 @@ $(document).ready(() => {
 	// 	// If btn has data-next
 	// 	if ($target.attr('data-next')) {			
 	// 		// Initialize the next card
-	// 		initNextCard($target.attr('data-next'), () => {
+	// 		initNextStep($target.attr('data-next'), () => {
 	// 			$("html, body").animate({
 	// 				scrollTop: $(document).height()
 	// 			});
