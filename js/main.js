@@ -1,8 +1,5 @@
 'use strict';
 
-// Self invoking function
-// Helps with global scope pollution
-// (() => {
 $(document).ready(() => {
 
 	// The root element we will put most of our magic in
@@ -115,38 +112,10 @@ $(document).ready(() => {
 		$card.addClass('is-active');
 		$root.append($card);
 
-		// Process the current 
-		initCurrentStep(card, () => {
-			if (card.designer && card.designer.next) {
-
-				// Set the prev card
-				// Set the prev item as the one in the DOM instead
-				// Because there could be multiple reference points in the designer.next value
-				const previousDomItem = $card.prev();
-				const prevCard = steps.filter(step => step.id === previousDomItem.attr('id'))[0];
-				scenario['prevCard'] = prevCard;
-
-				// Don't run next card if prompt
-				if (card.type === 'prompt') return;
-				initNextStep(nextCard);
-			}
-		});
-
-		// Optional callback
-		// Check if callback exists && check if it's an actual function
-		if (callback && typeof callback === 'function') callback();
-	}
-
-	/*
-		Processes the current card, running through all the logic (if any)
-		Takes 2 params:
-			1) Takes the currentCard's object
-			2) An optional callback so we know when initialization is complete
-	*/
-	function initCurrentStep(card, callback) {
 		stepCount += 1;
 		console.log(`# [Step: ${stepCount}]~~~~~~~~~~~~~~~~~~~~~~~ Initializing current "${card.type}" card...`, card);
 
+		// Process the card
 		switch (card.type) {
 			case 'assignVariable':
 				processAssignVariableCard(card);
@@ -164,9 +133,26 @@ $(document).ready(() => {
 				processPromptCard(card);
 				break;
 
+			case 'replaceScenario':
+				processReplaceScenarioCard(card);
+				break;
+
 			default:
 				// Default propgations
 				console.log('Do something default when processing!');
+		}
+
+		if (card.designer && card.designer.next) {
+			// Set the prev card
+			// Set the prev item as the one in the DOM instead
+			// Because there could be multiple reference points in the designer.next value
+			const previousDomItem = $card.prev();
+			const prevCard = steps.filter(step => step.id === previousDomItem.attr('id'))[0];
+			scenario['prevCard'] = prevCard;
+
+			// Don't run next card if prompt
+			if (card.type === 'prompt') return;
+			initNextStep(nextCard);
 		}
 
 		// Optional callback
@@ -174,7 +160,7 @@ $(document).ready(() => {
 		if (callback && typeof callback === 'function') callback();
 	}
 
-	function processAssignVariableCard(card, target) {
+	function processAssignVariableCard(card, vals) {
 		console.log(`Processing "${card.type}" card...`);
 
 		// Check if the card needs to 'set' any 'variables' by default
@@ -267,28 +253,32 @@ $(document).ready(() => {
 			$currentCard.append(`<p>${currentText[scenario.lang]}</p>`);
 
 			currentPrompt[scenario.lang].map((prompt, index) => {
-				const $btn = $(`<button data-index="${index}">${index} - ${prompt}</button>`);
+				const $btn = $(`<button value="${index}">${prompt} (${index})</button>`);
 
 				$currentCard.append($btn);
 
 				$btn.on('click', (event) => {
 					const $target = $(event.target);
 
-					scenario[card.variable] = parseInt($target.attr('data-index'));
+					scenario[card.variable] = parseInt($target.attr('value'));
 
-					initNextStep(scenario.nextCard, index);
+					initNextStep(scenario.nextCard);
 				});
 			});
 		} else if (card.attachment && card.attachment[0].type == 'AdaptiveCard') {
-			const adaptiveCard = processAdaptiveCard(card.attachment);
+			const adaptiveCard = processAdaptiveContent(card.attachment);
 
 			$currentCard.append(adaptiveCard);
 		}
 	}
 
+	function processReplaceScenarioCard(card) {
+		console.log(`Processing "${card.type}" card...`);
+	}
+
 	// Function to help process the AdaptiveCard
 	// Takes the attachment object as a param that lices inside type="AdaptiveCard" types
-	function processAdaptiveCard(attachment) {
+	function processAdaptiveContent(attachment) {
 		// Convert attachment to code
 		const cardCode = safelyConvertEval(attachment[0].cardCode);
 		const cardType = cardCode.body[0].type;
@@ -380,136 +370,4 @@ $(document).ready(() => {
 		$("html, body").animate({ scrollTop: $(document).height() }, 0);
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	// /*
-	// 	The below is for prototype purposes
-	// 	may eventually use some of the logic for future
-	// 	Next button is created dynamically
-	// 	This binds event handler to the "Next" button
-	// */
-	// $(document).on('click', '.card button', (event) => {
-	// 	// Get the button
-	// 	const $target = $(event.target);
-
-	// 	// If btn has data-next
-	// 	if ($target.attr('data-next')) {			
-	// 		// Initialize the next card
-	// 		initNextStep($target.attr('data-next'), () => {
-	// 			$("html, body").animate({
-	// 				scrollTop: $(document).height()
-	// 			});
-				
-	// 			$target.attr('disabled', true);
-	// 			$target.removeAttr('data-next');
-	// 		});
-	// 	}	
-	// });
-
-
-	// function runReporting(data) {
-	// 	const types = [];
-
-	// 	for (let i = 0; i < data.steps.length; i++) {
-	// 		const type = data.steps[i].type;
-	// 		const attachment = data.steps[i].attachment;
-
-	// 		if (types.indexOf(type) === -1) types.push(type);
-	// 	}
-
-	// 	console.log(`All step types: `, types);
-
-	// 	// Loop through each type
-	// 	for (let i in types) {
-	// 		const type = types[i];
-	// 		let count = 0;
-	// 		let attachmentCount = 0;
-	// 		let attachmentLabel = '';
-
-	// 		// Loop through data and match EACH step to EACH type
-	// 		// Increment the count
-	// 		for (let i = 0; i < data.steps.length; i++) {
-	// 			if (data.steps[i].type === type) {
-	// 				count++;
-
-	// 				if (data.steps[i].attachment) {
-	// 					attachmentLabel = data.steps[i].attachment[0].type;
-	// 					attachmentCount++
-	// 				}
-	// 			}
-	// 		}
-
-	// 		console.log(`Number of "${type}" occurences: ${count}`);
-
-	// 		if (attachmentCount > 0) {
-	// 			console.log(`» Number of ${attachmentLabel} inside "${type}": ${attachmentCount}`);
-	// 		}
-	// 	}
-	// }
-
 });
-// })();
