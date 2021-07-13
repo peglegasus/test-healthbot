@@ -4,7 +4,6 @@ $(document).ready(() => {
 
 	// The root element we will put most of our magic in
 	const $root = $(`#root`);
-	let stepCount = 0;
 
 	// Ajax call to the coreWrapper to grab the json
 	const coreWrapper = $.ajax({
@@ -78,7 +77,8 @@ $(document).ready(() => {
 
 		// Clear root container
 		// This will remove the loader too
-		$root.html('');
+		$root.html(``);
+		$root.append(`<ul class="cards"></ul>`);
 
 		// Hit the first step
 		console.log('Starting HealthBot steps...');
@@ -93,7 +93,12 @@ $(document).ready(() => {
 			2) Data we want to pass back and do some calculations
 			2) An optional callback so we know when initialization is complete
 	*/ 
-	function initNextStep(card, callback) {
+	function initNextStep(card, vals, callback) {
+		const $card = $(`
+			<li class="card" id="${card.id}" data-type="${card.type}">
+				<div class="card-body"></div>
+			</li>
+		`);
 		const steps = scenario.scope.steps;
 
 		// Set the current card
@@ -104,16 +109,21 @@ $(document).ready(() => {
 		const nextCard = steps.filter(step => step.id === card.designer.next)[0];
 		scenario['nextCard'] = nextCard;
 
-		const $card = $(`<div class="card" id="${card.id}" data-type="${card.type}"></div>`);
+		// Set the prev card
+		// Set the prev item as the one in the DOM instead
+		// Because there could be multiple reference points in the designer.next value
+		const previousDomItem = $card.prev() ? $card.prev() : null;
+		const prevCard = steps.filter(step => step.id === previousDomItem.attr('id'))[0];
+		scenario['prevCard'] = prevCard || null;
 
-		$card.append(`<p><strong>Type:</strong> ${card.type}</p>`);
-		$card.append(`<p><small><strong>Current ID:</strong> ${card.id} | <strong>Next ID:</strong> ${card.designer.next}</small></p>`);
-		$root.find('.card').removeClass('is-active');
+		handleScrollToBottom();
+
+		$card.append(`<p><small><strong>Type:</strong> ${card.type} | <strong>Current ID:</strong> ${card.id} | <strong>Next ID:</strong> ${card.designer.next}</small></p>`);
+		$root.find('.cards').find('.card').removeClass('is-active');
 		$card.addClass('is-active');
-		$root.append($card);
+		$root.find('.cards').append($card);
 
-		stepCount += 1;
-		console.log(`# [Step: ${stepCount}]~~~~~~~~~~~~~~~~~~~~~~~ Initializing current "${card.type}" card...`, card);
+		console.log(`# ~~~~~~~~~~~~~~~~~~~~~~~ Initializing current "${card.type}" card...`, card);
 
 		// Process the card
 		switch (card.type) {
@@ -123,6 +133,10 @@ $(document).ready(() => {
 
 			case 'action':
 				processActionCard(card);
+				break;
+
+			case 'statement':
+				processStatementCard(card);
 				break;
 
 			case 'branch':
@@ -142,17 +156,21 @@ $(document).ready(() => {
 				console.log('Do something default when processing!');
 		}
 
-		if (card.designer && card.designer.next) {
-			// Set the prev card
-			// Set the prev item as the one in the DOM instead
-			// Because there could be multiple reference points in the designer.next value
-			const previousDomItem = $card.prev();
-			const prevCard = steps.filter(step => step.id === previousDomItem.attr('id'))[0];
-			scenario['prevCard'] = prevCard;
+		// Don't run next card if prompt
+		// if (card.type === 'prompt') return
 
-			// Don't run next card if prompt
-			if (card.type === 'prompt') return;
-			initNextStep(nextCard);
+		// if we have a next card
+		if (card.designer.next) {
+			const $btn = $(`<button>Next</button>`);
+
+			if (card.type === 'prompt') return
+			
+			$card.append($btn);
+			$btn.focus();
+
+			$btn.on('click', () => {
+				initNextStep(scenario.nextCard);
+			});
 		}
 
 		// Optional callback
@@ -234,8 +252,24 @@ $(document).ready(() => {
 		}
 	}
 
-	function processBranchCard(card) {
+	function processStatementCard(card) {
 		console.log(`Processing "${card.type}" card...`);
+
+		let currentDomElement = $(`[id="${card.id}"]`);
+			currentDomElement = $(currentDomElement[currentDomElement.length - 1]);
+
+		if (card.text) {
+
+			const currentText = safelyConvertEval(card.text)[0];
+			currentDomElement.append(`<p>${currentText[scenario.lang]}</p>`);
+
+		} else if (card.attachment && card.attachment[0].type == 'AdaptiveCard') {
+
+			currentDomElement.append('<p>adaptiveCard:</p>');
+			const adaptiveCard = processAdaptiveContent(card.attachment);
+			currentDomElement.append(adaptiveCard);
+
+		}
 	}
 
 	// Initializes 'type: "prompt"' cards
@@ -245,30 +279,45 @@ $(document).ready(() => {
 		const currentText = safelyConvertEval(card.text)[0];
 		const currentPrompt = card.dataType !== 'object' ? safelyConvertEval(card.dataType)[0] : null;
 		
-		let $currentCard = $(`[id="${card.id}"]`);
-		$currentCard = $($currentCard[$currentCard.length - 1]);
+		let currentDomElement = $(`[id="${card.id}"]`);
+			currentDomElement = $(currentDomElement[currentDomElement.length - 1]);
 
 		// If prompt is a 'choice' type
 		if (card.choiceType === 'choice' && currentPrompt) {
-			$currentCard.append(`<p>${currentText[scenario.lang]}</p>`);
+			currentDomElement.append(`<p>${currentText[scenario.lang]}</p>`);
 
 			currentPrompt[scenario.lang].map((prompt, index) => {
 				const $btn = $(`<button value="${index}">${prompt} (${index})</button>`);
 
-				$currentCard.append($btn);
+				currentDomElement.append($btn);
 
 				$btn.on('click', (event) => {
 					const $target = $(event.target);
 
 					scenario[card.variable] = parseInt($target.attr('value'));
 
+					processUserResponse(card, $target);
+
 					initNextStep(scenario.nextCard);
 				});
 			});
-		} else if (card.attachment && card.attachment[0].type == 'AdaptiveCard') {
+		} else if (card.attachment && card.attachment[0].type === 'AdaptiveCard') {
+			
+			currentDomElement.append('<p>adaptiveCard:</p>');
 			const adaptiveCard = processAdaptiveContent(card.attachment);
+			currentDomElement.append(adaptiveCard);
 
-			$currentCard.append(adaptiveCard);
+		}
+	}
+
+	function processBranchCard(card) {
+		console.log(`Processing "${card.type}" card...`);
+		
+		if (card.condition) {
+			const nextCardId = card.targetStepId;
+			const nextCard = scenario.scope.steps.filter(step => step.id === nextCardId)[0];
+
+			initNextStep(nextCard);
 		}
 	}
 
@@ -279,69 +328,79 @@ $(document).ready(() => {
 	// Function to help process the AdaptiveCard
 	// Takes the attachment object as a param that lices inside type="AdaptiveCard" types
 	function processAdaptiveContent(attachment) {
-		// Convert attachment to code
 		const cardCode = safelyConvertEval(attachment[0].cardCode);
-		const cardType = cardCode.body[0].type;
-		const cardStyle = cardCode.body[0].style;
+		const cardBody = cardCode.body;
 
-		let cardValue;
-		let cardPlaceholder;
-		let cardChoices = [];
+		// Rebuilding the cardBody with actual converted strings
+		for (let i = 0; i < cardBody.length; i++) {
+			const currentItem = cardBody[i];
 
-		for (let i = 0; i < cardCode.body[0].choices.length; i++) {
-			const choice = cardCode.body[0].choices[i];
-			
-			if (choice.value === 'default_message') {
-				cardValue = choice.value;
-				cardPlaceholder = choice.title[0][scenario.lang];
-			} else {
-				for (let j = 0; j < choice.title[scenario.lang].length; j++) {
-					const option = choice.title[scenario.lang][j];
-					const optionObject = {
-						"title": option,
-						"value": j + 1
+			if (currentItem.type === 'TextBlock') {
+
+				if (currentItem.text) {
+					const newItemText = currentItem.text[0][scenario.lang];
+					currentItem.text = newItemText;
+				}
+
+			} else if (currentItem.type === 'ColumnSet') {
+				
+				for (let j = 0; j < currentItem.columns.length; j++) {
+					const currentColumn = currentItem.columns[j];
+
+					if (currentColumn.items[0].type === 'TextBlock') {
+						const newColumnText = currentColumn.items[0].text[0][scenario.lang];
+						currentColumn.items[0].text = newColumnText;
+					}
+				}
+
+			} else if (currentItem.type === "Input.ChoiceSet") {
+
+				const newChoices = [];
+				
+				for (let j = 0; j < currentItem.choices.length; j++) {
+					const choice = currentItem.choices[j];
+					const item = {
+						"title": "",
+						"value": ""
 					}
 
-					cardChoices.push(optionObject);
+					if (choice.value === 'default_message') {
+						item.title = "Please make a selection";
+						item.value = "default_message";
+					} else {
+						item.title = choice.title[0][scenario.lang];
+						item.value = choice.value;
+					}
+					newChoices.push(item)
 				}
+
+				currentItem.choices = newChoices;
+	
 			}
 		}
 
-		const newAdaptiveCard = {
-			"$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-			"type": "AdaptiveCard",
-			"version": "1.0",
-			"body": [
-				{
-					"type": cardType,
-					"id": "requiredCompactId",
-					"style": cardStyle,
-					"value": cardValue,
-					"isMultiSelect": false,
-					"label": "Please select age",
-					"isRequired": true,
-					"errorMessage": "Please me a choice",
-					"placeholder" : cardPlaceholder,
-					"choices": cardChoices
-				}
-			],
-			"actions": [
-				{
-					"type": "Action.Submit",
-					"title": "Submit"
-				}
-			]
+		// if actions exist
+		if (cardCode.actions) {
+
+			let newActions = [];
+			let newActionItem = {
+				"type": cardCode.actions[0].type,
+				"title": cardCode.actions[0].title[0][scenario.lang]
+			}
+			
+			newActions.push(newActionItem);
+			cardCode.actions = newActions;
 		}
 
 		// Create a AdaptiveCard instance
 		const adaptiveCard = new AdaptiveCards.AdaptiveCard();
 
-		// Set its hostConfig property unless you want to use the default Host Config
-		// Host Config defines the style and behavior of a card
-		adaptiveCard.hostConfig = new AdaptiveCards.HostConfig({
-			fontFamily: "Segoe UI, Helvetica Neue, sans-serif"
-			// More host config options
-		});
+		// // Set its hostConfig property unless you want to use the default Host Config
+		// // Host Config defines the style and behavior of a card
+		// adaptiveCard.hostConfig = new AdaptiveCards.HostConfig({
+		// 	fontFamily: "Segoe UI, Helvetica Neue, sans-serif"
+		// 	// More host config options
+		// });
 
 		// Set the adaptive card's event handlers. onExecuteAction is invoked
 		// whenever an action is clicked in the card
@@ -350,7 +409,7 @@ $(document).ready(() => {
 		}
 
 		// Parse the card payload
-		adaptiveCard.parse(newAdaptiveCard);
+		adaptiveCard.parse(cardCode);
 
 		// Render the card to an HTML element:
 		const renderedCard = adaptiveCard.render();
@@ -360,14 +419,22 @@ $(document).ready(() => {
 		return renderedCard
 	}
 
-	function safelyConvertEval(str) {
-		return Function(
-			`'use strict'; return (${str})`
-		)();
+	function processUserResponse(card, target) {
+		let currentDomElement = $(`[id="${card.id}"]`);
+			currentDomElement = $(currentDomElement[currentDomElement.length - 1]);
+
+		const $card = $(`<li class="card card--response"></li>`);
+
+		$card.append(`<p>You said: ${target.text()}</p>`);
+		$root.find('.cards').append($card);
 	}
 
-	function handleScrollToBottom() {
-		$("html, body").animate({ scrollTop: $(document).height() }, 0);
+	function safelyConvertEval(stringToConvert) {
+		return Function( `'use strict'; return (${stringToConvert})` )();
+	}
+
+	function handleScrollToBottom(speed) {
+		$("html, body").animate({ scrollTop: $(document).height() }, speed ? speed : 0);
 	}
 
 });

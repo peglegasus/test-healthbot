@@ -14,7 +14,14 @@ body {
 }
 
 button {
+	background-color: #fff;
+    border: 2px solid #333;
+    border-radius: 4px;
 	cursor: pointer;
+	padding: 10px 16px;
+}
+button + button {
+	margin-left: 8px;
 }
 
 #root {
@@ -23,11 +30,17 @@ button {
 
 .card {
 	background-color: #eee;
-	border: 1px solid black;
+	border: 2px solid #333;
 	border-radius: 6px;
 	margin: 8px;
-	padding: 6px;
+	padding: 1rem;
+	width: auto;
 }
 .card.is-active {
-	background-color: #ade6c6;
+	background-color: #74ea63;
+}
+
+.card--response {
+	background-color: #a6cbd8;
+	width: auto;
 }
