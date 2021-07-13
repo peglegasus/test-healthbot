@@ -286,6 +286,10 @@ $(document).ready(() => {
 		if (card.choiceType === 'choice' && currentPrompt) {
 			currentDomElement.append(`<p>${currentText[scenario.lang]}</p>`);
 
+			if (!scenario[card.variable]) {
+				scenario[card.variable] = {};
+			}
+
 			currentPrompt[scenario.lang].map((prompt, index) => {
 				const $btn = $(`<button value="${index}">${prompt} (${index})</button>`);
 
@@ -294,7 +298,7 @@ $(document).ready(() => {
 				$btn.on('click', (event) => {
 					const $target = $(event.target);
 
-					scenario[card.variable] = parseInt($target.attr('value'));
+					scenario[card.variable].index = parseInt($target.attr('value'));
 
 					processUserResponse(card, $target);
 
@@ -314,7 +318,15 @@ $(document).ready(() => {
 		console.log(`Processing "${card.type}" card...`);
 		
 		if (card.condition) {
-			const nextCardId = card.targetStepId;
+
+			var funct = new Function(card.condition);
+
+			let nextCardId = "";
+			if(funct()){
+				nextCardId = card.targetStepId;				
+			} else {
+				nextCardId = card.designer.next;
+			}
 			const nextCard = scenario.scope.steps.filter(step => step.id === nextCardId)[0];
 
 			initNextStep(nextCard);
