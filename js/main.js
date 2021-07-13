@@ -267,7 +267,9 @@ $(document).ready(() => {
 		if (card.text) {
 
 			const currentText = safelyConvertEval(card.text)[0];
-			currentDomElement.append(`<p>${currentText[scenario.lang]}</p>`);
+			var md = window.markdownit();
+			var result = md.render(currentText[scenario.lang]);			
+			currentDomElement.append(`<p>${result}</p>`);
 
 		} else if (card.attachment && card.attachment[0].type == 'AdaptiveCard') {
 
