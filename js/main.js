@@ -53,6 +53,12 @@ $(document).ready(() => {
 	// Async requests
 	$.when(coreWrapper, coreProtocol, localization, qNa).done(() => {
 		window.scenario = window.scenario || {};
+		
+		window.conversation = window.conversation || {}; // healthbot conversation log
+		
+		window.session = window.session || {}; // healthbot metrics hook
+		window.session.logCustomEvent = function(){};
+		window.session.trace = function(){};
 
 		if (
 			coreWrapper.statusText === 'OK' &&
@@ -270,6 +276,12 @@ $(document).ready(() => {
 			currentDomElement.append(adaptiveCard);
 
 		}
+
+		if(card.designer.next){
+			const nextCard = scenario.scope.steps.filter(step => step.id === card.designer.next)[0];
+			initNextStep(nextCard);
+		}
+
 	}
 
 	// Initializes 'type: "prompt"' cards
@@ -319,9 +331,9 @@ $(document).ready(() => {
 		
 		if (card.condition) {
 
-			var funct = new Function(card.condition);
-
+			let funct = new Function("return " + card.condition);
 			let nextCardId = "";
+
 			if(funct()){
 				nextCardId = card.targetStepId;				
 			} else {
