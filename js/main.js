@@ -53,6 +53,12 @@ $(document).ready(() => {
 	// Async requests
 	$.when(coreWrapper, coreProtocol, localization, qNa).done(() => {
 		window.scenario = window.scenario || {};
+		
+		window.conversation = window.conversation || {}; // healthbot conversation log
+		
+		window.session = window.session || {}; // healthbot metrics hook
+		window.session.logCustomEvent = function(){};
+		window.session.trace = function(){};
 
 		if (
 			coreWrapper.statusText === 'OK' &&
@@ -261,7 +267,9 @@ $(document).ready(() => {
 		if (card.text) {
 
 			const currentText = safelyConvertEval(card.text)[0];
-			currentDomElement.append(`<p>${currentText[scenario.lang]}</p>`);
+			var md = window.markdownit();
+			var result = md.render(currentText[scenario.lang]);			
+			currentDomElement.append(`<p>${result}</p>`);
 
 		} else if (card.attachment && card.attachment[0].type == 'AdaptiveCard') {
 
@@ -270,6 +278,12 @@ $(document).ready(() => {
 			currentDomElement.append(adaptiveCard);
 
 		}
+
+		if(card.designer.next){
+			const nextCard = scenario.scope.steps.filter(step => step.id === card.designer.next)[0];
+			initNextStep(nextCard);
+		}
+
 	}
 
 	// Initializes 'type: "prompt"' cards
@@ -286,6 +300,10 @@ $(document).ready(() => {
 		if (card.choiceType === 'choice' && currentPrompt) {
 			currentDomElement.append(`<p>${currentText[scenario.lang]}</p>`);
 
+			if (!scenario[card.variable]) {
+				scenario[card.variable] = {};
+			}
+
 			currentPrompt[scenario.lang].map((prompt, index) => {
 				const $btn = $(`<button value="${index}">${prompt} (${index})</button>`);
 
@@ -294,7 +312,7 @@ $(document).ready(() => {
 				$btn.on('click', (event) => {
 					const $target = $(event.target);
 
-					scenario[card.variable] = parseInt($target.attr('value'));
+					scenario[card.variable].index = parseInt($target.attr('value'));
 
 					processUserResponse(card, $target);
 
@@ -314,7 +332,15 @@ $(document).ready(() => {
 		console.log(`Processing "${card.type}" card...`);
 		
 		if (card.condition) {
-			const nextCardId = card.targetStepId;
+
+			let funct = new Function("return " + card.condition);
+			let nextCardId = "";
+
+			if(funct()){
+				nextCardId = card.targetStepId;				
+			} else {
+				nextCardId = card.designer.next;
+			}
 			const nextCard = scenario.scope.steps.filter(step => step.id === nextCardId)[0];
 
 			initNextStep(nextCard);
