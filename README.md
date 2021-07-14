@@ -13,6 +13,7 @@ Custom JSON parser for Self-Checker Healthbot.
 - CSS
 - Javascript, jQuery
 - Adaptive Cards
+- QnA Maker (possibly)
 
 ## Getting Started:
 
