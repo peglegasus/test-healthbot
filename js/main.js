@@ -417,13 +417,8 @@ $(document).ready(() => {
 		// Set the adaptive card's event handlers. onExecuteAction is invoked
 		// whenever an action is clicked in the card
 		adaptiveCard.onExecuteAction = function(action) {
-			// processedData I get back once I execute an action inside the adaptiveCard
-			const dataType = action["_processedData"];
-
-			if (dataType.state) {
-				scenario[card.variable] = dataType.state;
-			}
-			
+			// this works if there is ONE and only one output variable. 
+			scenario[card.variable] = action._processedData[Object.keys(action._processedData)[0]];
 			initNextStep(scenario.nextCard);
 		}
 
