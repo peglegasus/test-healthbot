@@ -73,23 +73,37 @@ $(document).ready(() => {
 			scenario['localization'] = localization.responseJSON;
 			scenario['qNa'] = qNa.responseJSON;
 
-			scenario.localization.forEach(function (value) {				
-				customLocalizedStrings[value["String ID"]] = value["en-us"];
-			});
+			handleCustomLocalizedStrings(scenario.lang);
+
+			// Clear root container
+			// This will remove the loader too
+			$root.html(``);
+			$root.append(`<ul class="cards"></ul>`);
 
 			initHealthBot(scenario.coreWrapper);
+		} else {
+
 		}
 	});
+
+	function handleCustomLocalizedStrings(targetLang) {
+		scenario.localization.forEach(function (value) {				
+			customLocalizedStrings[value["String ID"]] = value[targetLang];
+		});
+
+		// scenario['customLocalizedStrings'] = scenario['customLocalizedStrings'] || {};
+		
+		// for (let key in scenario.localization) {
+		// 	let prop = scenario.localization[key]['String ID'];
+
+		// 	scenario['customLocalizedStrings'][prop] = scenario.localization[key][targetLang];
+		// }
+	}
 
 	function initHealthBot(startingObj) {
 		console.log('HealthBot initialized...');
 
 		scenario['scope'] = startingObj;
-
-		// Clear root container
-		// This will remove the loader too
-		$root.html(``);
-		$root.append(`<ul class="cards"></ul>`);
 
 		// Hit the first step
 		console.log('Starting HealthBot steps...');
@@ -215,6 +229,7 @@ $(document).ready(() => {
 		// If our onInit exists
 		if (card.onInit) {
 
+			console.log(card.onInit)
 			const reg = /customLocalizedStrings\[["']([^'"]*)["']]/g			
 			card.onInit = card.onInit.replace(reg, `scenario.localization.filter(string => string["String ID"] === "$1")`);
 			
@@ -244,7 +259,7 @@ $(document).ready(() => {
 		} else if (card.attachment && card.attachment[0].type == 'AdaptiveCard') {
 
 			currentDomElement.append('<p>adaptiveCard:</p>');
-			const adaptiveCard = processAdaptiveContent(card.attachment);
+			const adaptiveCard = processAdaptiveContent(card);
 			currentDomElement.append(adaptiveCard);
 
 		}
@@ -292,7 +307,7 @@ $(document).ready(() => {
 		} else if (card.attachment && card.attachment[0].type === 'AdaptiveCard') {
 			
 			currentDomElement.append('<p>adaptiveCard:</p>');
-			const adaptiveCard = processAdaptiveContent(card.attachment);
+			const adaptiveCard = processAdaptiveContent(card);
 			currentDomElement.append(adaptiveCard);
 
 		}
@@ -323,25 +338,25 @@ $(document).ready(() => {
 
 	// Function to help process the AdaptiveCard
 	// Takes the attachment object as a param that lices inside type="AdaptiveCard" types
-	function processAdaptiveContent(attachment) {
-		const cardCode = safelyConvertEval(attachment[0].cardCode);
+	function processAdaptiveContent(card) {
+		const cardCode = safelyConvertEval(card.attachment[0].cardCode);
 		const cardBody = cardCode.body;
 
 		// Rebuilding the cardBody with actual converted strings
 		for (let i = 0; i < cardBody.length; i++) {
-			const currentItem = cardBody[i];
+			const currentBody = cardBody[i];
 
-			if (currentItem.type === 'TextBlock') {
+			if (currentBody.type === 'TextBlock') {
 
-				if (currentItem.text) {
-					const newItemText = currentItem.text[0][scenario.lang];
-					currentItem.text = newItemText;
+				if (currentBody.text) {
+					const newItemText = currentBody.text[0][scenario.lang];
+					currentBody.text = newItemText;
 				}
 
-			} else if (currentItem.type === 'ColumnSet') {
+			} else if (currentBody.type === 'ColumnSet') {
 				
-				for (let j = 0; j < currentItem.columns.length; j++) {
-					const currentColumn = currentItem.columns[j];
+				for (let j = 0; j < currentBody.columns.length; j++) {
+					const currentColumn = currentBody.columns[j];
 
 					if (currentColumn.items[0].type === 'TextBlock') {
 						const newColumnText = currentColumn.items[0].text[0][scenario.lang];
@@ -349,12 +364,13 @@ $(document).ready(() => {
 					}
 				}
 
-			} else if (currentItem.type === "Input.ChoiceSet") {
+			} else if (currentBody.type === "Input.ChoiceSet") {
 
+				currentBody.isRequired = true;
 				const newChoices = [];
 				
-				for (let j = 0; j < currentItem.choices.length; j++) {
-					const choice = currentItem.choices[j];
+				for (let j = 0; j < currentBody.choices.length; j++) {
+					const choice = currentBody.choices[j];
 					const item = {
 						"title": "",
 						"value": ""
@@ -370,7 +386,7 @@ $(document).ready(() => {
 					newChoices.push(item)
 				}
 
-				currentItem.choices = newChoices;
+				currentBody.choices = newChoices;
 	
 			}
 		}
@@ -401,16 +417,23 @@ $(document).ready(() => {
 		// Set the adaptive card's event handlers. onExecuteAction is invoked
 		// whenever an action is clicked in the card
 		adaptiveCard.onExecuteAction = function(action) {
+			// processedData I get back once I execute an action inside the adaptiveCard
+			const dataType = action["_processedData"];
+
+			if (dataType.state) {
+				scenario[card.variable] = dataType.state;
+			}
+			
 			initNextStep(scenario.nextCard);
 		}
 
 		// Parse the card payload
 		adaptiveCard.parse(cardCode);
 
-		// Render the card to an HTML element:
+		// Render the card as an HTML element in memory
 		const renderedCard = adaptiveCard.render();
 
-		// And finally insert it somewhere in your page:
+		// And finally insert or return it somewhere in your page
 		// console.log(renderedCard)
 		return renderedCard
 	}
