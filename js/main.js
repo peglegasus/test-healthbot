@@ -244,7 +244,7 @@ $(document).ready(() => {
 		} else if (card.attachment && card.attachment[0].type == 'AdaptiveCard') {
 
 			currentDomElement.append('<p>adaptiveCard:</p>');
-			const adaptiveCard = processAdaptiveContent(card.attachment);
+			const adaptiveCard = processAdaptiveContent(card);
 			currentDomElement.append(adaptiveCard);
 
 		}
@@ -292,7 +292,7 @@ $(document).ready(() => {
 		} else if (card.attachment && card.attachment[0].type === 'AdaptiveCard') {
 			
 			currentDomElement.append('<p>adaptiveCard:</p>');
-			const adaptiveCard = processAdaptiveContent(card.attachment);
+			const adaptiveCard = processAdaptiveContent(card);
 			currentDomElement.append(adaptiveCard);
 
 		}
@@ -323,8 +323,8 @@ $(document).ready(() => {
 
 	// Function to help process the AdaptiveCard
 	// Takes the attachment object as a param that lices inside type="AdaptiveCard" types
-	function processAdaptiveContent(attachment) {
-		const cardCode = safelyConvertEval(attachment[0].cardCode);
+	function processAdaptiveContent(card) {
+		const cardCode = safelyConvertEval(card.attachment[0].cardCode);
 		const cardBody = cardCode.body;
 
 		// Rebuilding the cardBody with actual converted strings
@@ -401,6 +401,8 @@ $(document).ready(() => {
 		// Set the adaptive card's event handlers. onExecuteAction is invoked
 		// whenever an action is clicked in the card
 		adaptiveCard.onExecuteAction = function(action) {
+			// this works if there is ONE and only one output variable. 
+			scenario[card.variable] = action._processedData[Object.keys(action._processedData)[0]];
 			initNextStep(scenario.nextCard);
 		}
 
