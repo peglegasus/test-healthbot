@@ -26,6 +26,6 @@ Custom JSON parser for Self-Checker Healthbot.
 ## Useful Links:
 
 - [Azure Healthbot Dev Instance](https://eastus.healthbot.microsoft.com/account/cdcetdabtestcovidhealthbot-byzwl2p/scenarios/manage)
+- [COVID-19 Self-Checker Dev Instance](https://www.cdc.gov/coronavirus/2019-ncov/symptoms-testing/coronavirus-self-checker.html)
 - [Adaptive Cards](http://adaptivecards.io/)
 - [QnA Maker](https://www.qnamaker.ai/)
-- [COVID-19 Self-Checker Dev Instance](https://www.cdc.gov/coronavirus/2019-ncov/symptoms-testing/coronavirus-self-checker.html)
