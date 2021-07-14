@@ -54,6 +54,7 @@ $(document).ready(() => {
 	$.when(coreWrapper, coreProtocol, localization, qNa).done(() => {
 		window.scenario = window.scenario || {};
 		
+		window.customLocalizedStrings = [];
 		window.conversation = window.conversation || {}; // healthbot conversation log
 		
 		window.session = window.session || {}; // healthbot metrics hook
@@ -71,6 +72,10 @@ $(document).ready(() => {
 			scenario['coreProtocol'] = coreProtocol.responseJSON;
 			scenario['localization'] = localization.responseJSON;
 			scenario['qNa'] = qNa.responseJSON;
+
+			scenario.localization.forEach(function (value) {				
+				customLocalizedStrings[value["String ID"]] = value["en-us"];
+			});
 
 			initHealthBot(scenario.coreWrapper);
 		}
@@ -166,17 +171,15 @@ $(document).ready(() => {
 		// if (card.type === 'prompt') return
 
 		// if we have a next card
-		if (card.designer.next) {
-			const $btn = $(`<button>Next</button>`);
-
-			if (card.type === 'prompt') return
+		if (scenario.nextCard) {
+			if (card.type === 'prompt') return;
 			
-			$card.append($btn);
-			$btn.focus();
-
-			$btn.on('click', () => {
+			// const $btn = $(`<button>Next</button>`);
+			// $card.append($btn);
+			// $btn.focus();
+			// $btn.on('click', () => {
 				initNextStep(scenario.nextCard);
-			});
+			//});
 		}
 
 		// Optional callback
@@ -211,42 +214,9 @@ $(document).ready(() => {
 
 		// If our onInit exists
 		if (card.onInit) {
-			// Split it into an array so we can parse through it
-			let oldInit = card.onInit.split(' ');
-			// Create new empty array to push items to
-			let newInit = [];
-			
-			// Iterate through the onInit value that has been split
-			for (let i = 0; i < oldInit.length; i++) {
-				// Set a var for the current item's string val we are iterating through
-				let item = oldInit[i];
 
-				// If our iteration item has a 'customLocalizedStrings' string 
-				if (item.indexOf('customLocalizedStrings') !== -1) {
-					// Get the message location blob
-					// This is so we can map the items later
-					let blob = item.substring(
-						item.lastIndexOf('["') + 2, 
-						item.lastIndexOf('"]')
-					);
-
-					// Replace the old string with the new string
-					// This is so we can filter through the localizedStrings to grab the current items
-					let newItemStart = item.replace(/customLocalizedStrings/g, `scenario.localization.filter(string => string["String ID"] === "${blob}")`);
-
-					// Remove the old blob because at this point we haven't removed it yet
-					newItemStart = newItemStart.replaceAll(`["${blob}"]`, '');
-					// Reassign the item string to the newly created string
-					item = newItemStart;
-				}
-
-				// Push the each item to the newly created array
-				newInit.push(item);
-			}
-
-			// Set the old onInit value to the newly created one
-			// This has our new string assignments
-			card.onInit = newInit.join(' ');
+			const reg = /customLocalizedStrings\[["']([^'"]*)["']]/g			
+			card.onInit = card.onInit.replace(reg, `scenario.localization.filter(string => string["String ID"] === "$1")`);
 			
 			// Create a new function with our new string value
 			// At the point it is just JS logic stored as strings
@@ -279,10 +249,10 @@ $(document).ready(() => {
 
 		}
 
-		if(card.designer.next){
-			const nextCard = scenario.scope.steps.filter(step => step.id === card.designer.next)[0];
-			initNextStep(nextCard);
-		}
+		// if(card.designer.next){
+		// 	const nextCard = scenario.scope.steps.filter(step => step.id === card.designer.next)[0];
+		// 	initNextStep(nextCard);
+		// }
 
 	}
 
@@ -343,7 +313,7 @@ $(document).ready(() => {
 			}
 			const nextCard = scenario.scope.steps.filter(step => step.id === nextCardId)[0];
 
-			initNextStep(nextCard);
+			scenario.nextCard = nextCard;
 		}
 	}
 
