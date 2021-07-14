@@ -402,7 +402,14 @@ $(document).ready(() => {
 		// whenever an action is clicked in the card
 		adaptiveCard.onExecuteAction = function(action) {
 			// this works if there is ONE and only one output variable. 
-			scenario[card.variable] = action._processedData[Object.keys(action._processedData)[0]];
+
+			scenario[card.variable] = {};
+			for (const key in action._processedData) {				
+				scenario[card.variable][`${key}`] = action._processedData[`${key}`];
+			}
+
+
+			//scenario[card.variable] = action._processedData[Object.keys(action._processedData)[0]];
 			initNextStep(scenario.nextCard);
 		}
 
