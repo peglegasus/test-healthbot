@@ -61,6 +61,8 @@ $(document).ready(() => {
 		window.session.logCustomEvent = function(){};
 		window.session.trace = function(){};
 
+		window.didLocalization = false;
+
 		if (
 			coreWrapper.statusText === 'OK' &&
 			coreProtocol.statusText === 'OK' &&
@@ -73,37 +75,23 @@ $(document).ready(() => {
 			scenario['localization'] = localization.responseJSON;
 			scenario['qNa'] = qNa.responseJSON;
 
-			handleCustomLocalizedStrings(scenario.lang);
-
-			// Clear root container
-			// This will remove the loader too
-			$root.html(``);
-			$root.append(`<ul class="cards"></ul>`);
-
+			scenario.localization.forEach(function (value) {				
+				customLocalizedStrings[value["String ID"]] = value["en-us"];
+			});
+			
 			initHealthBot(scenario.coreWrapper);
-		} else {
-
 		}
 	});
-
-	function handleCustomLocalizedStrings(targetLang) {
-		scenario.localization.forEach(function (value) {				
-			customLocalizedStrings[value["String ID"]] = value[targetLang];
-		});
-
-		// scenario['customLocalizedStrings'] = scenario['customLocalizedStrings'] || {};
-		
-		// for (let key in scenario.localization) {
-		// 	let prop = scenario.localization[key]['String ID'];
-
-		// 	scenario['customLocalizedStrings'][prop] = scenario.localization[key][targetLang];
-		// }
-	}
 
 	function initHealthBot(startingObj) {
 		console.log('HealthBot initialized...');
 
 		scenario['scope'] = startingObj;
+
+		// Clear root container
+		// This will remove the loader too
+		$root.html(``);
+		$root.append(`<ul class="cards"></ul>`);
 
 		// Hit the first step
 		console.log('Starting HealthBot steps...');
@@ -181,8 +169,13 @@ $(document).ready(() => {
 				console.log('Do something default when processing!');
 		}
 
-		// Don't run next card if prompt
-		// if (card.type === 'prompt') return
+
+		if(!didLocalization && scenario.messages){
+			for (const key in scenario.messages) {				
+				scenario.messages[`${key}`] = scenario.messages[`${key}`][0][scenario.lang];
+			}
+			didLocalization = true;
+		}
 
 		// if we have a next card
 		if (scenario.nextCard) {
@@ -229,7 +222,6 @@ $(document).ready(() => {
 		// If our onInit exists
 		if (card.onInit) {
 
-			console.log(card.onInit)
 			const reg = /customLocalizedStrings\[["']([^'"]*)["']]/g			
 			card.onInit = card.onInit.replace(reg, `scenario.localization.filter(string => string["String ID"] === "$1")`);
 			
@@ -251,9 +243,9 @@ $(document).ready(() => {
 
 		if (card.text) {
 
-			const currentText = safelyConvertEval(card.text)[0];
+			const currentText = safelyConvertEval(card.text);
 			var md = window.markdownit();
-			var result = md.render(currentText[scenario.lang]);			
+			var result = md.render(currentText);			
 			currentDomElement.append(`<p>${result}</p>`);
 
 		} else if (card.attachment && card.attachment[0].type == 'AdaptiveCard') {
@@ -275,7 +267,7 @@ $(document).ready(() => {
 	function processPromptCard(card) {
 		console.log(`Processing "${card.type}" card...`);
 
-		const currentText = safelyConvertEval(card.text)[0];
+		const currentText = safelyConvertEval(card.text);
 		const currentPrompt = card.dataType !== 'object' ? safelyConvertEval(card.dataType)[0] : null;
 		
 		let currentDomElement = $(`[id="${card.id}"]`);
@@ -283,7 +275,7 @@ $(document).ready(() => {
 
 		// If prompt is a 'choice' type
 		if (card.choiceType === 'choice' && currentPrompt) {
-			currentDomElement.append(`<p>${currentText[scenario.lang]}</p>`);
+			currentDomElement.append(`<p>${currentText}</p>`);
 
 			if (!scenario[card.variable]) {
 				scenario[card.variable] = {};
@@ -343,66 +335,65 @@ $(document).ready(() => {
 		const cardBody = cardCode.body;
 
 		// Rebuilding the cardBody with actual converted strings
-		for (let i = 0; i < cardBody.length; i++) {
-			const currentBody = cardBody[i];
+		// for (let i = 0; i < cardBody.length; i++) {
+		// 	const currentItem = cardBody[i];
 
-			if (currentBody.type === 'TextBlock') {
+		// 	if (currentItem.type === 'TextBlock') {
 
-				if (currentBody.text) {
-					const newItemText = currentBody.text[0][scenario.lang];
-					currentBody.text = newItemText;
-				}
+		// 		if (currentItem.text) {
+		// 			const newItemText = currentItem.text[0][scenario.lang];
+		// 			currentItem.text = newItemText;
+		// 		}
 
-			} else if (currentBody.type === 'ColumnSet') {
+		// 	} else if (currentItem.type === 'ColumnSet') {
 				
-				for (let j = 0; j < currentBody.columns.length; j++) {
-					const currentColumn = currentBody.columns[j];
+		// 		for (let j = 0; j < currentItem.columns.length; j++) {
+		// 			const currentColumn = currentItem.columns[j];
 
-					if (currentColumn.items[0].type === 'TextBlock') {
-						const newColumnText = currentColumn.items[0].text[0][scenario.lang];
-						currentColumn.items[0].text = newColumnText;
-					}
-				}
+		// 			if (currentColumn.items[0].type === 'TextBlock') {
+		// 				const newColumnText = currentColumn.items[0].text[0][scenario.lang];
+		// 				currentColumn.items[0].text = newColumnText;
+		// 			}
+		// 		}
 
-			} else if (currentBody.type === "Input.ChoiceSet") {
+		// 	} else if (currentItem.type === "Input.ChoiceSet") {
 
-				currentBody.isRequired = true;
-				const newChoices = [];
+		// 		const newChoices = [];
 				
-				for (let j = 0; j < currentBody.choices.length; j++) {
-					const choice = currentBody.choices[j];
-					const item = {
-						"title": "",
-						"value": ""
-					}
+		// 		for (let j = 0; j < currentItem.choices.length; j++) {
+		// 			const choice = currentItem.choices[j];
+		// 			const item = {
+		// 				"title": "",
+		// 				"value": ""
+		// 			}
 
-					if (choice.value === 'default_message') {
-						item.title = "Please make a selection";
-						item.value = "default_message";
-					} else {
-						item.title = choice.title[0][scenario.lang];
-						item.value = choice.value;
-					}
-					newChoices.push(item)
-				}
+		// 			if (choice.value === 'default_message') {
+		// 				item.title = "Please make a selection";
+		// 				item.value = "default_message";
+		// 			} else {
+		// 				item.title = choice.title[0][scenario.lang];
+		// 				item.value = choice.value;
+		// 			}
+		// 			newChoices.push(item)
+		// 		}
 
-				currentBody.choices = newChoices;
+		// 		currentItem.choices = newChoices;
 	
-			}
-		}
+		// 	}
+		// }
 
-		// if actions exist
-		if (cardCode.actions) {
+		// // if actions exist
+		// if (cardCode.actions) {
 
-			let newActions = [];
-			let newActionItem = {
-				"type": cardCode.actions[0].type,
-				"title": cardCode.actions[0].title[0][scenario.lang]
-			}
+		// 	let newActions = [];
+		// 	let newActionItem = {
+		// 		"type": cardCode.actions[0].type,
+		// 		"title": cardCode.actions[0].title[0][scenario.lang]
+		// 	}
 			
-			newActions.push(newActionItem);
-			cardCode.actions = newActions;
-		}
+		// 	newActions.push(newActionItem);
+		// 	cardCode.actions = newActions;
+		// }
 
 		// Create a AdaptiveCard instance
 		const adaptiveCard = new AdaptiveCards.AdaptiveCard();
@@ -432,10 +423,10 @@ $(document).ready(() => {
 		// Parse the card payload
 		adaptiveCard.parse(cardCode);
 
-		// Render the card as an HTML element in memory
+		// Render the card to an HTML element:
 		const renderedCard = adaptiveCard.render();
 
-		// And finally insert or return it somewhere in your page
+		// And finally insert it somewhere in your page:
 		// console.log(renderedCard)
 		return renderedCard
 	}
