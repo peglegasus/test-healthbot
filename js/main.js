@@ -13,7 +13,7 @@ $(document).ready(() => {
 			console.log('Retrieved Core Wrapper');
 		},
 		error: (err) => {
-			console.log('Error retrieving Core Wrapper. Error = ' , err);
+			console.log('Error retrieving Core Wrapper. Error = ', err);
 		}
 	});
 
@@ -25,7 +25,7 @@ $(document).ready(() => {
 			console.log('Retrieved Core Protocol');
 		},
 		error: (err) => {
-			console.log('Error retrieving Core Protocol. Error = ' , err);
+			console.log('Error retrieving Core Protocol. Error = ', err);
 		}
 	});
 
@@ -37,7 +37,7 @@ $(document).ready(() => {
 			console.log('Retrieved Localizaion');
 		},
 		error: (err) => {
-			console.log('Error retrieving Localizaion. Error = ' , err);
+			console.log('Error retrieving Localizaion. Error = ', err);
 		}
 	});
 
@@ -49,22 +49,20 @@ $(document).ready(() => {
 			console.log('Retrieved Questions And Answers');
 		},
 		error: (err) => {
-			console.log('Error retrieving Questions And Answers. Error = ' , err);
+			console.log('Error retrieving Questions And Answers. Error = ', err);
 		}
 	});
 
 	// Async requests
 	$.when(covid19, covid19_core, localization).done((response, data) => {
 		window.scenario = window.scenario || {};
-		
+
 		window.customLocalizedStrings = [];
 		window.conversation = window.conversation || {}; // healthbot conversation log
-		
-		window.session = window.session || {}; // healthbot metrics hook
-		window.session.logCustomEvent = function(){};
-		window.session.trace = function(){};
 
-		window.didLocalization = false;
+		window.session = window.session || {}; // healthbot metrics hook
+		window.session.logCustomEvent = function () { };
+		window.session.trace = function () { };
 
 		if (
 			covid19.statusText === 'OK' &&
@@ -77,10 +75,10 @@ $(document).ready(() => {
 			scenario['localization'] = localization.responseJSON;
 			scenario['lang'] = 'en-us';
 
-			scenario.localization.forEach(function (value) {				
+			scenario.localization.forEach(function (value) {
 				customLocalizedStrings[value["String ID"]] = value["en-us"];
 			});
-			
+
 			initHealthBot(covid19.responseJSON.scenario_trigger);
 		}
 	});
@@ -113,7 +111,7 @@ $(document).ready(() => {
 			1) Takes an the next targets' stored object
 			2) Data we want to pass back and do some calculations
 			2) An optional callback so we know when initialization is complete
-	*/ 
+	*/
 	function initNextStep(card, vals, callback) {
 		const $card = $(`
 			<li class="card" id="${card.id}" data-type="${card.type}">
@@ -170,7 +168,7 @@ $(document).ready(() => {
 
 			case 'replaceScenario':
 				processReplaceScenarioCard(card);
-				break;
+				return;
 
 			default:
 				// Default propgations
@@ -178,36 +176,42 @@ $(document).ready(() => {
 		}
 
 
-		if(!didLocalization && scenario.messages && scenario.dictionary && scenario.state_list){
-
-			// these resource objects contain localization data that needs to be remapped.
-			function doLocalizationMapping(obj){
-				for (const key in obj) {
-					if(Array.isArray(obj[`${key}`])){
-						obj[`${key}`] = obj[`${key}`][0][scenario.lang];
-					}else{
-						if(typeof obj[`${key}`] === 'object' && obj[`${key}`] !== null)
-							doLocalizationMapping(obj[`${key}`]);				
+		// these resource objects contain localization data that needs to be remapped.
+		function doLocalizationMapping(obj) {
+			if (obj.localized) { return; }
+			for (const key in obj) {
+				if (Array.isArray(obj[`${key}`])) {
+					try {
+						if (obj[`${key}`][0]) {
+							let mapped = obj[`${key}`][0][scenario.lang];
+							obj[`${key}`] = mapped;
+						}
+					} catch (error) {
+						console.log(`failed to set: ${key}`);
 					}
+				} else {
+					if (typeof obj[`${key}`] === 'object' && obj[`${key}`] !== null)
+						doLocalizationMapping(obj[`${key}`]);
 				}
-			}	
-
-			doLocalizationMapping(scenario.messages);
-			doLocalizationMapping(scenario.dictionary);
-			doLocalizationMapping(scenario.state_list);
-			
-			didLocalization = true;
+			}
+			obj.localized = true;
 		}
+
+		if (scenario.messages && !scenario.messages.localized) doLocalizationMapping(scenario.messages);
+		if (scenario.dictionary && !scenario.dictionary.localized) doLocalizationMapping(scenario.dictionary);
+		if (scenario.state_list && !scenario.state_list.localized) doLocalizationMapping(scenario.state_list);
+
+
 
 		// if we have a next card
 		if (scenario.nextCard) {
 			if (card.type === 'prompt') return;
-			
+
 			// const $btn = $(`<button>Next</button>`);
 			// $card.append($btn);
 			// $btn.focus();
 			// $btn.on('click', () => {
-				initNextStep(scenario.nextCard);
+			initNextStep(scenario.nextCard);
 			//});
 		}
 
@@ -244,9 +248,9 @@ $(document).ready(() => {
 		// If our onInit exists
 		if (card.onInit) {
 
-			const reg = /customLocalizedStrings\[["']([^'"]*)["']]/g			
+			const reg = /customLocalizedStrings\[["']([^'"]*)["']]/g
 			card.onInit = card.onInit.replace(reg, `scenario.localization.filter(string => string["String ID"] === "$1")`);
-			
+
 			// Create a new function with our new string value
 			// At the point it is just JS logic stored as strings
 			// We will want this run this
@@ -261,13 +265,13 @@ $(document).ready(() => {
 		console.log(`Processing "${card.type}" card...`);
 
 		let currentDomElement = $(`[id="${card.id}"]`);
-			currentDomElement = $(currentDomElement[currentDomElement.length - 1]);
+		currentDomElement = $(currentDomElement[currentDomElement.length - 1]);
 
 		if (card.text) {
 
 			const currentText = safelyConvertEval(card.text);
 			var md = window.markdownit();
-			var result = md.render(currentText);			
+			var result = md.render(currentText);
 			currentDomElement.append(`<p>${result}</p>`);
 
 		} else if (card.attachment && card.attachment[0].type == 'AdaptiveCard') {
@@ -291,9 +295,9 @@ $(document).ready(() => {
 
 		const currentText = safelyConvertEval(card.text);
 		const currentPrompt = card.dataType !== 'object' ? safelyConvertEval(card.dataType) : null;
-		
+
 		let currentDomElement = $(`[id="${card.id}"]`);
-			currentDomElement = $(currentDomElement[currentDomElement.length - 1]);
+		currentDomElement = $(currentDomElement[currentDomElement.length - 1]);
 
 		// If prompt is a 'choice' type
 		if (card.choiceType === 'choice' && currentPrompt) {
@@ -319,7 +323,7 @@ $(document).ready(() => {
 				});
 			});
 		} else if (card.attachment && card.attachment[0].type === 'AdaptiveCard') {
-			
+
 			currentDomElement.append('<p>adaptiveCard:</p>');
 			const adaptiveCard = processAdaptiveContent(card);
 			currentDomElement.append(adaptiveCard);
@@ -329,14 +333,14 @@ $(document).ready(() => {
 
 	function processBranchCard(card) {
 		console.log(`Processing "${card.type}" card...`);
-		
+
 		if (card.condition) {
 
 			let funct = new Function("return " + card.condition);
 			let nextCardId = "";
 
-			if(funct()){
-				nextCardId = card.targetStepId;				
+			if (funct()) {
+				nextCardId = card.targetStepId;
 			} else {
 				nextCardId = card.designer.next;
 			}
@@ -354,7 +358,7 @@ $(document).ready(() => {
 
 		let funct = new Function("return " + card.args);
 		let args = funct();
-		for (const key in args) {				
+		for (const key in args) {
 			scenario.scenarioArgs[`${key}`] = args[`${key}`];
 		}
 
@@ -367,7 +371,7 @@ $(document).ready(() => {
 	// Takes the attachment object as a param that lices inside type="AdaptiveCard" types
 	function processAdaptiveContent(card) {
 		const cardCode = safelyConvertEval(card.attachment[0].cardCode);
-				
+
 		// Create a AdaptiveCard instance
 		const adaptiveCard = new AdaptiveCards.AdaptiveCard();
 
@@ -380,12 +384,12 @@ $(document).ready(() => {
 
 		// Set the adaptive card's event handlers. onExecuteAction is invoked
 		// whenever an action is clicked in the card
-		adaptiveCard.onExecuteAction = function(action) {
+		adaptiveCard.onExecuteAction = function (action) {
 			scenario[card.variable] = {};
-			for (const key in action._processedData) {				
+			for (const key in action._processedData) {
 				scenario[card.variable][`${key}`] = action._processedData[`${key}`];
 			}
-			
+
 			initNextStep(scenario.nextCard);
 		}
 
@@ -402,7 +406,7 @@ $(document).ready(() => {
 
 	function processUserResponse(card, target) {
 		let currentDomElement = $(`[id="${card.id}"]`);
-			currentDomElement = $(currentDomElement[currentDomElement.length - 1]);
+		currentDomElement = $(currentDomElement[currentDomElement.length - 1]);
 
 		const $card = $(`<li class="card card--response"></li>`);
 
@@ -411,7 +415,7 @@ $(document).ready(() => {
 	}
 
 	function safelyConvertEval(stringToConvert) {
-		return Function( `'use strict'; return (${stringToConvert})` )();
+		return Function(`'use strict'; return (${stringToConvert})`)();
 	}
 
 	function handleScrollToBottom(speed) {
