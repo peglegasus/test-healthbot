@@ -170,10 +170,24 @@ $(document).ready(() => {
 		}
 
 
-		if(!didLocalization && scenario.messages){
-			for (const key in scenario.messages) {				
-				scenario.messages[`${key}`] = scenario.messages[`${key}`][0][scenario.lang];
-			}
+		if(!didLocalization && scenario.messages && scenario.dictionary && scenario.state_list){
+
+			// these resource objects contain localization data that needs to be remapped.
+			function doLocalizationMapping(obj){
+				for (const key in obj) {
+					if(Array.isArray(obj[`${key}`])){
+						obj[`${key}`] = obj[`${key}`][0][scenario.lang];
+					}else{
+						if(typeof obj[`${key}`] === 'object' && obj[`${key}`] !== null)
+							doLocalizationMapping(obj[`${key}`]);				
+					}
+				}
+			}	
+
+			doLocalizationMapping(scenario.messages);
+			doLocalizationMapping(scenario.dictionary);
+			doLocalizationMapping(scenario.state_list);
+			
 			didLocalization = true;
 		}
 
@@ -268,7 +282,7 @@ $(document).ready(() => {
 		console.log(`Processing "${card.type}" card...`);
 
 		const currentText = safelyConvertEval(card.text);
-		const currentPrompt = card.dataType !== 'object' ? safelyConvertEval(card.dataType)[0] : null;
+		const currentPrompt = card.dataType !== 'object' ? safelyConvertEval(card.dataType) : null;
 		
 		let currentDomElement = $(`[id="${card.id}"]`);
 			currentDomElement = $(currentDomElement[currentDomElement.length - 1]);
@@ -281,7 +295,7 @@ $(document).ready(() => {
 				scenario[card.variable] = {};
 			}
 
-			currentPrompt[scenario.lang].map((prompt, index) => {
+			currentPrompt.map((prompt, index) => {
 				const $btn = $(`<button value="${index}">${prompt} (${index})</button>`);
 
 				currentDomElement.append($btn);
@@ -332,69 +346,7 @@ $(document).ready(() => {
 	// Takes the attachment object as a param that lices inside type="AdaptiveCard" types
 	function processAdaptiveContent(card) {
 		const cardCode = safelyConvertEval(card.attachment[0].cardCode);
-		const cardBody = cardCode.body;
-
-		// Rebuilding the cardBody with actual converted strings
-		// for (let i = 0; i < cardBody.length; i++) {
-		// 	const currentItem = cardBody[i];
-
-		// 	if (currentItem.type === 'TextBlock') {
-
-		// 		if (currentItem.text) {
-		// 			const newItemText = currentItem.text[0][scenario.lang];
-		// 			currentItem.text = newItemText;
-		// 		}
-
-		// 	} else if (currentItem.type === 'ColumnSet') {
 				
-		// 		for (let j = 0; j < currentItem.columns.length; j++) {
-		// 			const currentColumn = currentItem.columns[j];
-
-		// 			if (currentColumn.items[0].type === 'TextBlock') {
-		// 				const newColumnText = currentColumn.items[0].text[0][scenario.lang];
-		// 				currentColumn.items[0].text = newColumnText;
-		// 			}
-		// 		}
-
-		// 	} else if (currentItem.type === "Input.ChoiceSet") {
-
-		// 		const newChoices = [];
-				
-		// 		for (let j = 0; j < currentItem.choices.length; j++) {
-		// 			const choice = currentItem.choices[j];
-		// 			const item = {
-		// 				"title": "",
-		// 				"value": ""
-		// 			}
-
-		// 			if (choice.value === 'default_message') {
-		// 				item.title = "Please make a selection";
-		// 				item.value = "default_message";
-		// 			} else {
-		// 				item.title = choice.title[0][scenario.lang];
-		// 				item.value = choice.value;
-		// 			}
-		// 			newChoices.push(item)
-		// 		}
-
-		// 		currentItem.choices = newChoices;
-	
-		// 	}
-		// }
-
-		// // if actions exist
-		// if (cardCode.actions) {
-
-		// 	let newActions = [];
-		// 	let newActionItem = {
-		// 		"type": cardCode.actions[0].type,
-		// 		"title": cardCode.actions[0].title[0][scenario.lang]
-		// 	}
-			
-		// 	newActions.push(newActionItem);
-		// 	cardCode.actions = newActions;
-		// }
-
 		// Create a AdaptiveCard instance
 		const adaptiveCard = new AdaptiveCards.AdaptiveCard();
 
@@ -408,15 +360,11 @@ $(document).ready(() => {
 		// Set the adaptive card's event handlers. onExecuteAction is invoked
 		// whenever an action is clicked in the card
 		adaptiveCard.onExecuteAction = function(action) {
-			// this works if there is ONE and only one output variable. 
-
 			scenario[card.variable] = {};
 			for (const key in action._processedData) {				
 				scenario[card.variable][`${key}`] = action._processedData[`${key}`];
 			}
-
-
-			//scenario[card.variable] = action._processedData[Object.keys(action._processedData)[0]];
+			
 			initNextStep(scenario.nextCard);
 		}
 
