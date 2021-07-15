@@ -347,7 +347,16 @@ $(document).ready(() => {
 	}
 
 	function processReplaceScenarioCard(card) {
+
+		scenario.scenarioArgs = {};
+
 		console.log(`Processing "${card.type}" card...`);
+
+		let funct = new Function("return " + card.args);
+		let args = funct();
+		for (const key in args) {				
+			scenario.scenarioArgs[`${key}`] = args[`${key}`];
+		}
 
 		const newScope = card.scenario || null;
 
