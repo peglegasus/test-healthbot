@@ -25,7 +25,9 @@ Custom parser for interpretting Self-Checker JSON exports.
 
 ## Useful Links:
 
+- [https://github.com/CDCgov/covid19healthbot](https://github.com/CDCgov/covid19healthbot)
 - [MS Azure Healthbot Dev Instance](https://eastus.healthbot.microsoft.com/account/cdcetdabtestcovidhealthbot-byzwl2p/scenarios/manage)
+- [Viral Testing Tool](https://www.cdc.gov/coronavirus/2019-ncov/testing/index.html)
 - [COVID-19 Self-Checker](https://www.cdc.gov/coronavirus/2019-ncov/symptoms-testing/coronavirus-self-checker.html)
 - [Adaptive Cards](http://adaptivecards.io/)
 - [QnA Maker](https://www.qnamaker.ai/)
