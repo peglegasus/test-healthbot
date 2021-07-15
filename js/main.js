@@ -5,9 +5,9 @@ $(document).ready(() => {
 	// The root element we will put most of our magic in
 	const $root = $(`#root`);
 
-	// Ajax call to the coreWrapper to grab the json
-	const coreWrapper = $.ajax({
-		url: './js/core_wrapper.json',
+	// Ajax call to the covid19 to grab the json
+	const covid19 = $.ajax({
+		url: './js/covid_19_cdc_wrapper.json',
 		dataType: 'json',
 		success: (response) => {
 			console.log('Retrieved Core Wrapper');
@@ -16,9 +16,10 @@ $(document).ready(() => {
 			console.log('Error retrieving Core Wrapper. Error = ' , err);
 		}
 	});
-	// Ajax call to the coreProtocol to grab the json
-	const coreProtocol = $.ajax({
-		url: './js/core_protocol.json',
+
+	// Ajax call to the covid19_core to grab the json
+	const covid19_core = $.ajax({
+		url: './js/covid_19_core_protocol.json',
 		dataType: 'json',
 		success: (response) => {
 			console.log('Retrieved Core Protocol');
@@ -27,6 +28,7 @@ $(document).ready(() => {
 			console.log('Error retrieving Core Protocol. Error = ' , err);
 		}
 	});
+
 	// Ajax call to the localization to grab the json
 	const localization = $.ajax({
 		url: './js/localization.json',
@@ -38,6 +40,7 @@ $(document).ready(() => {
 			console.log('Error retrieving Localizaion. Error = ' , err);
 		}
 	});
+
 	// Ajax call to the localization to grab the json
 	const qNa = $.ajax({
 		url: './js/questions_and_answers.json',
@@ -51,7 +54,7 @@ $(document).ready(() => {
 	});
 
 	// Async requests
-	$.when(coreWrapper, coreProtocol, localization, qNa).done(() => {
+	$.when(covid19, covid19_core, localization).done((response, data) => {
 		window.scenario = window.scenario || {};
 		
 		window.customLocalizedStrings = [];
@@ -64,39 +67,44 @@ $(document).ready(() => {
 		window.didLocalization = false;
 
 		if (
-			coreWrapper.statusText === 'OK' &&
-			coreProtocol.statusText === 'OK' &&
-			localization.statusText === 'OK' &&
-			qNa.statusText === 'OK'
+			covid19.statusText === 'OK' &&
+			covid19_core.statusText === 'OK' &&
+			localization.statusText === 'OK'
 		) {
-			scenario['lang'] = 'en-us';
-			scenario['coreWrapper'] = coreWrapper.responseJSON;
-			scenario['coreProtocol'] = coreProtocol.responseJSON;
+			scenario[covid19.responseJSON.scenario_trigger] = JSON.parse(covid19.responseJSON.code);
+			scenario[covid19_core.responseJSON.scenario_trigger] = JSON.parse(covid19_core.responseJSON.code);
+
 			scenario['localization'] = localization.responseJSON;
-			scenario['qNa'] = qNa.responseJSON;
+			scenario['lang'] = 'en-us';
 
 			scenario.localization.forEach(function (value) {				
 				customLocalizedStrings[value["String ID"]] = value["en-us"];
 			});
 			
-			initHealthBot(scenario.coreWrapper);
+			initHealthBot(covid19.responseJSON.scenario_trigger);
 		}
 	});
 
-	function initHealthBot(startingObj) {
+	function initHealthBot(scope) {
 		console.log('HealthBot initialized...');
 
-		scenario['scope'] = startingObj;
+		// Set the scope of our project
+		// Scopes are for example core_wrapper, core_protocol, etc
+		scenario['scope'] = scope;
 
 		// Clear root container
 		// This will remove the loader too
-		$root.html(``);
-		$root.append(`<ul class="cards"></ul>`);
+		const cards = $root.find('.cards');
+
+		if (cards.length < 1) {
+			$root.html(``);
+			$root.append(`<ul class="cards"></ul>`);
+		}
 
 		// Hit the first step
 		console.log('Starting HealthBot steps...');
 
-		initNextStep(scenario.scope.steps[0]);
+		initNextStep(scenario[scenario.scope].steps[0]);
 	}
 
 	/* 
@@ -112,7 +120,7 @@ $(document).ready(() => {
 				<div class="card-body"></div>
 			</li>
 		`);
-		const steps = scenario.scope.steps;
+		const steps = scenario[scenario.scope].steps;
 
 		// Set the current card
 		const currentCard = card;
@@ -332,7 +340,7 @@ $(document).ready(() => {
 			} else {
 				nextCardId = card.designer.next;
 			}
-			const nextCard = scenario.scope.steps.filter(step => step.id === nextCardId)[0];
+			const nextCard = scenario[scenario.scope].steps.filter(step => step.id === nextCardId)[0];
 
 			scenario.nextCard = nextCard;
 		}
@@ -340,6 +348,10 @@ $(document).ready(() => {
 
 	function processReplaceScenarioCard(card) {
 		console.log(`Processing "${card.type}" card...`);
+
+		const newScope = card.scenario || null;
+
+		initHealthBot(newScope);
 	}
 
 	// Function to help process the AdaptiveCard
