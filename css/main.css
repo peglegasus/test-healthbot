@@ -13,6 +13,10 @@ body {
 	font-size: 1rem;
 }
 
+ul {
+	padding-left: 10px;
+}
+
 button {
 	background-color: #fff;
     border: 2px solid #333;
@@ -32,9 +36,11 @@ button + button {
 	background-color: #eee;
 	border: 2px solid #333;
 	border-radius: 6px;
-	margin: 8px;
 	padding: 1rem;
 	width: auto;
+}
+.card + .card {
+	margin-top: 10px;
 }
 .card.is-active {
 	background-color: #74ea63;

@@ -89,9 +89,7 @@ $(document).ready(() => {
 	*/
 	function initNextStep(card, vals, callback) {
 		const $card = $(`
-			<li class="card" id="${card.id}" data-type="${card.type}">
-				<div class="card-body"></div>
-			</li>
+			<li class="card" id="${card.id}" data-type="${card.type}"></li>
 		`);
 		const steps = scenario[scenario.scope].steps;
 
