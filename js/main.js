@@ -266,6 +266,7 @@ $(document).ready(() => {
 
 	// Initializes 'type: "prompt"' cards
 	function processPromptCard(card) {
+	
 		console.log(`Processing "${card.type}" card...`);
 
 		const currentText = safelyConvertEval(card.text);
@@ -273,15 +274,14 @@ $(document).ready(() => {
 
 		let currentDomElement = $(`[id="${card.id}"]`);
 		currentDomElement = $(currentDomElement[currentDomElement.length - 1]);
+		currentDomElement.append(`<p>${currentText}</p>`);
 
-		// If prompt is a 'choice' type
-		if (card.choiceType === 'choice' && currentPrompt) {
-			currentDomElement.append(`<p>${currentText}</p>`);
+		if (!scenario[card.variable]) {
+			scenario[card.variable] = {};
+		}
 
-			if (!scenario[card.variable]) {
-				scenario[card.variable] = {};
-			}
-
+		// If prompt is a 'choice' type : button list
+		if (card.choiceType === 'choice' && currentPrompt) {			
 			currentPrompt.map((prompt, index) => {
 				const $btn = $(`<button value="${index}">${prompt} (${index})</button>`);
 
@@ -297,6 +297,43 @@ $(document).ready(() => {
 					initNextStep(scenario.nextCard);
 				});
 			});
+		} else if (card.choiceType === 'multi-choice' && currentPrompt) {
+
+/*
+{
+  "id": "605e233e0f3f-697f7bccbc0bab5e-fd64",
+  "type": "prompt",
+  "dataType": "scenario.symptom_lists.ethnicity.text",
+  "designer": {
+    "xLocation": 1228,
+    "yLocation": 769,
+    "listStyle": 5,
+    "next": "138a202802d7-6ab8fc3a06db11f4-51a0"
+  },
+  "text": "scenario.questions.ethnicity_question",
+  "variable": "ethnicity",
+  "stringId": "stringId_4d064ea244c6a142",
+  "choiceType": "multi-choice",
+  "label": "Q44 ethnicity",
+  "submitTitle": "scenario.dictionary.submit_button"
+}
+*/
+			currentPrompt.map((prompt, index) => {
+				const $cbx = $(`<div style="display: flex; align-items: center;"><input id="${index}_${card.id}" type="checkbox" value="01" aria-label="${prompt}"><label class="" for="${index}_${card.id}"><p>${prompt}</p></label></div>`)
+				currentDomElement.append($cbx);
+			});
+
+			const $btn = $(`<button>${scenario.dictionary.submit_button}</button>`);
+
+			currentDomElement.append($btn);
+
+			$btn.on('click', (event) => {
+				const $target = $(event.target);
+				scenario[card.variable].index = "0"; /// what needs to happen here?
+				processUserResponse(card, $target); // or here?
+				initNextStep(scenario.nextCard);
+			});
+			
 		} else if (card.attachment && card.attachment[0].type === 'AdaptiveCard') {
 
 			currentDomElement.append('<p>adaptiveCard:</p>');
@@ -342,9 +379,7 @@ $(document).ready(() => {
 		getResource(scenarios[card.scenario], function (response) {
 			scenario[response.scenario_trigger] = JSON.parse(response.code);
 			initHealthBot(response.scenario_trigger);
-		});
-
-		initHealthBot(newScope);
+		});		
 	}
 
 	// Function to help process the AdaptiveCard
