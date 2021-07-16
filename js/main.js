@@ -5,86 +5,61 @@ $(document).ready(() => {
 	// The root element we will put most of our magic in
 	const $root = $(`#root`);
 
-	// Ajax call to the covid19 to grab the json
-	const covid19 = $.ajax({
-		url: './js/covid_19_cdc_wrapper.json',
-		dataType: 'json',
-		success: (response) => {
-			console.log('Retrieved Core Wrapper');
-		},
-		error: (err) => {
-			console.log('Error retrieving Core Wrapper. Error = ', err);
-		}
-	});
+	window.scenarios = {
+		covid19: "./js/covid_19_cdc_wrapper.json",
+		localization: "./js/localization.json",
+		covid19_core: "./js/covid_19_core_protocol.json",
+		covid19_vax_core: "./js/covid_19_core_vaccinated_protocol.json",
+		covid19_core_pediatric: "covid_19_core_pediatric_protocol.json",
+		covid19_core_asymptomatic: "covid_19_core_asymptomatic_protocol.json"
+	}
 
-	// Ajax call to the covid19_core to grab the json
-	const covid19_core = $.ajax({
-		url: './js/covid_19_core_protocol.json',
-		dataType: 'json',
-		success: (response) => {
-			console.log('Retrieved Core Protocol');
-		},
-		error: (err) => {
-			console.log('Error retrieving Core Protocol. Error = ', err);
-		}
-	});
+	window.scenario = window.scenario || {};
+	window.scenario.lang = 'en-us';
 
-	// Ajax call to the localization to grab the json
-	const localization = $.ajax({
-		url: './js/localization.json',
-		dataType: 'json',
-		success: (response) => {
-			console.log('Retrieved Localizaion');
-		},
-		error: (err) => {
-			console.log('Error retrieving Localizaion. Error = ', err);
-		}
-	});
+	window.customLocalizedStrings = [];
+	window.conversation = window.conversation || {}; // healthbot conversation log
 
-	// Ajax call to the localization to grab the json
-	const qNa = $.ajax({
-		url: './js/questions_and_answers.json',
-		dataType: 'json',
-		success: (response) => {
-			console.log('Retrieved Questions And Answers');
-		},
-		error: (err) => {
-			console.log('Error retrieving Questions And Answers. Error = ', err);
-		}
-	});
+	window.session = window.session || {}; // healthbot metrics hook
+	window.session.logCustomEvent = function () { };
+	window.session.trace = function () { };
 
-	// Async requests
-	$.when(covid19, covid19_core, localization).done((response, data) => {
-		window.scenario = window.scenario || {};
+	function getResource(url, callback) {
 
-		window.customLocalizedStrings = [];
-		window.conversation = window.conversation || {}; // healthbot conversation log
+		var request = $.ajax({
+			url: url,
+			dataType: 'json',
+			success: (response) => {
+				console.log('Retrieved data from :' + url);
+			},
+			error: (err) => {
+				console.log('Error retrieving data from: ' + url + '. Error = ', err);
+			}
+		});
+		request.done(function (res) {
+			callback(res);
+		});
+		request.fail(function (jqXHR, textStatus) {
+			console.error(jqXHR);
+			callback({ err: true, message: "Request failed: " + textStatus });
+		});
 
-		window.session = window.session || {}; // healthbot metrics hook
-		window.session.logCustomEvent = function () { };
-		window.session.trace = function () { };
+	}
 
-		if (
-			covid19.statusText === 'OK' &&
-			covid19_core.statusText === 'OK' &&
-			localization.statusText === 'OK'
-		) {
-			scenario[covid19.responseJSON.scenario_trigger] = JSON.parse(covid19.responseJSON.code);
-			scenario[covid19_core.responseJSON.scenario_trigger] = JSON.parse(covid19_core.responseJSON.code);
+	getResource(scenarios.localization, function (response) {
+		scenario.localization = response;
+		scenario.localization.forEach(function (value) {
+			customLocalizedStrings[value["String ID"]] = value[scenario.lang];
+		});
 
-			scenario['localization'] = localization.responseJSON;
-			scenario['lang'] = 'en-us';
-
-			scenario.localization.forEach(function (value) {
-				customLocalizedStrings[value["String ID"]] = value["en-us"];
-			});
-
-			initHealthBot(covid19.responseJSON.scenario_trigger);
-		}
+		getResource(scenarios.covid19, function (response) {
+			scenario[response.scenario_trigger] = JSON.parse(response.code);
+			initHealthBot(response.scenario_trigger);
+		});
 	});
 
 	function initHealthBot(scope) {
-		console.log('HealthBot initialized...');
+		console.log('HealthBot scope:' + scope + ' initialized...');
 
 		// Set the scope of our project
 		// Scopes are for example core_wrapper, core_protocol, etc
@@ -363,6 +338,11 @@ $(document).ready(() => {
 		}
 
 		const newScope = card.scenario || null;
+
+		getResource(scenarios[card.scenario], function (response) {
+			scenario[response.scenario_trigger] = JSON.parse(response.code);
+			initHealthBot(response.scenario_trigger);
+		});
 
 		initHealthBot(newScope);
 	}
