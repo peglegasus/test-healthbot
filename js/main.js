@@ -374,12 +374,10 @@ $(document).ready(() => {
 			scenario.scenarioArgs[`${key}`] = args[`${key}`];
 		}
 
-		const newScope = card.scenario || null;
-
 		getResource(scenarios[card.scenario], function (response) {
 			scenario[response.scenario_trigger] = JSON.parse(response.code);
 			initHealthBot(response.scenario_trigger);
-		});		
+		});
 	}
 
 	// Function to help process the AdaptiveCard
