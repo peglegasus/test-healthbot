@@ -317,7 +317,8 @@ $(document).ready(() => {
 }
 */
 			currentPrompt.map((prompt, index) => {
-				const $cbx = $(`<div style="display: flex; align-items: center;"><input id="${index}_${card.id}" type="checkbox" value="01" aria-label="${prompt}"><label class="" for="${index}_${card.id}"><p>${prompt}</p></label></div>`)
+				let valueString = "0" + (index+1);
+				const $cbx = $(`<div style="display: flex; align-items: center;"><input id="${index}_${card.id}" type="checkbox" value="${valueString}" aria-label="${prompt}"><label class="" for="${index}_${card.id}"><p>${prompt}</p></label></div>`)
 				currentDomElement.append($cbx);
 			});
 
@@ -326,8 +327,14 @@ $(document).ready(() => {
 			currentDomElement.append($btn);
 
 			$btn.on('click', (event) => {
+				scenario[card.variable] = [];
+
+				var checkedBoxes = document.getElementById(card.id).querySelectorAll('input:checked');
+				checkedBoxes.forEach((cbx, index)=>{
+					scenario[card.variable].push({index:cbx.value});
+				});
+
 				const $target = $(event.target);
-				scenario[card.variable].index = "0"; /// what needs to happen here?
 				processUserResponse(card, $target); // or here?
 				initNextStep(scenario.nextCard);
 			});
@@ -418,10 +425,18 @@ $(document).ready(() => {
 	function processUserResponse(card, target) {
 		let currentDomElement = $(`[id="${card.id}"]`);
 		currentDomElement = $(currentDomElement[currentDomElement.length - 1]);
-
 		const $card = $(`<li class="card card--response"></li>`);
 
-		$card.append(`<p>You said: ${target.text()}</p>`);
+		if(!Array.isArray(scenario[card.variable])){
+			$card.append(`<p>You said: ${target.text()}</p>`);
+		} else {
+			let selected=[];
+			let checkedBoxes = document.getElementById(card.id).querySelectorAll('input:checked');
+			checkedBoxes.forEach((cbx, index) => {
+				selected.push($('label[for="'+ cbx.id+'"]')[0].innerText);
+			});
+			$card.append(`<p>You said: ${selected.join(",")}</p>`);
+		}
 		$root.find('.cards').append($card);
 	}
 
