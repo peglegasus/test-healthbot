@@ -20,7 +20,11 @@ $(document).ready(() => {
 	window.customLocalizedStrings = [];
 	window.conversation = window.conversation || {}; // healthbot conversation log
 
-	window.session = window.session || {}; // healthbot metrics hook
+	window.session = window.session || {
+		logOutcomeEvent: () => {
+			console.log('logOutcomeEvent');
+		}
+	}; // healthbot metrics hook
 	window.session.logCustomEvent = function () { };
 	window.session.trace = function () { };
 
