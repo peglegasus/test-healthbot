@@ -114,7 +114,7 @@ $(document).ready(() => {
 
 		handleScrollToBottom();
 
-		$card.append(`<p><small><strong>Type:</strong> ${card.type} | <strong>Current ID:</strong> ${card.id} | <strong>Next ID:</strong> ${card.designer.next}</small></p>`);
+		$card.append(`<p><small><strong>Type:</strong> ${card.type} | <strong>Current ID:</strong> ${card.id} | <strong>Next ID:</strong> ${card.designer.next ? card.designer.next : 'endcap'}</small></p>`);
 		$root.find('.cards').find('.card').removeClass('is-active');
 		$card.addClass('is-active');
 		$root.find('.cards').append($card);
