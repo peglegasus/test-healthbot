@@ -14,18 +14,20 @@ $(document).ready(() => {
 		covid19_core_asymptomatic: "./js/covid_19_core_asymptomatic_protocol.json"
 	}
 
+	// Flag to turn on/off development mode
+	window.devMode = false;
+	
 	window.scenario = window.scenario || {};
 	window.scenario.lang = 'en-us'; // set to english by default - TODO: figure out localization later
 	window.customLocalizedStrings = [];
 	window.conversation = window.conversation || {}; // healthbot conversation log
-	window.session = window.session || {
-		// Adding a blank method until we figure out this 'session' stuff
-		logOutcomeEvent: () => {
-			console.log('logOutcomeEvent');
-		}
-	}; // healthbot metrics hook
-	// window.session.logCustomEvent = function () { };
-	window.session.trace = function () { };
+	
+	// Custom session events we arent sure of yet
+	// Possible healthbot metrics hook
+	window.session = window.session || {};
+	window.session.logCustomEvent = () => { };
+	window.session.logOutcomeEvent = () => { };
+	window.session.trace = () => { };
 
 	function getResource(url, callback) {
 
@@ -91,9 +93,7 @@ $(document).ready(() => {
 			2) An optional callback so we know when initialization is complete
 	*/
 	function initNextStep(card, vals, callback) {
-		const $card = $(`
-			<li class="card" id="${card.id}" data-type="${card.type}"></li>
-		`);
+		const $card = $(`<li id="${card.id}" class="card" data-type="${card.type}"></li>`);
 		const steps = scenario[scenario.scope].steps;
 
 		// Set the current card
@@ -104,19 +104,25 @@ $(document).ready(() => {
 		const nextCard = steps.filter(step => step.id === card.designer.next)[0];
 		scenario['nextCard'] = nextCard;
 
-		// Set the prev card
-		// Set the prev item as the one in the DOM instead
-		// Because there could be multiple reference points in the designer.next value
-		const previousDomItem = $card.prev() ? $card.prev() : null;
-		const prevCard = steps.filter(step => step.id === previousDomItem.attr('id'))[0];
-		scenario['prevCard'] = prevCard || null;
-
-		handleScrollToBottom();
-
 		$card.append(`<p><small><strong>Type:</strong> ${card.type} | <strong>Current ID:</strong> ${card.id} | <strong>Next ID:</strong> ${card.designer.next ? card.designer.next : 'endcap'}</small></p>`);
 		$root.find('.cards').find('.card').removeClass('is-active');
 		$card.addClass('is-active');
-		$root.find('.cards').append($card);
+
+		if (devMode || card.type === 'prompt') {
+			$root.find('.cards').append($card);
+		}
+
+		// Set the prev card
+		// Because there could be multiple reference points in the designer.next key value
+		// We map the prevCard as the previous DOM item's id value instead
+		const previousDomItem = $card.prev().length > 0 ? $card.prev() : null;
+
+		if (previousDomItem) {
+			const prevCard = steps.filter(step => step.id === previousDomItem.attr('id'))[0];
+			scenario['prevCard'] = prevCard;
+		}
+
+		handleScrollToBottom();
 
 		console.log(`# ~~~~~~~~~~~~~~~~~~~~~~~ Initializing current "${card.type}" card...`, card);
 
