@@ -10,22 +10,21 @@ $(document).ready(() => {
 		localization: "./js/localization.json",
 		covid19_core: "./js/covid_19_core_protocol.json",
 		covid19_vax_core: "./js/covid_19_core_vaccinated_protocol.json",
-		covid19_core_pediatric: "covid_19_core_pediatric_protocol.json",
-		covid19_core_asymptomatic: "covid_19_core_asymptomatic_protocol.json"
+		covid19_core_pediatric: "./js/covid_19_core_pediatric_protocol.json",
+		covid19_core_asymptomatic: "./js/covid_19_core_asymptomatic_protocol.json"
 	}
 
 	window.scenario = window.scenario || {};
-	window.scenario.lang = 'en-us';
-
+	window.scenario.lang = 'en-us'; // set to english by default - TODO: figure out localization later
 	window.customLocalizedStrings = [];
 	window.conversation = window.conversation || {}; // healthbot conversation log
-
 	window.session = window.session || {
+		// Adding a blank method until we figure out this 'session' stuff
 		logOutcomeEvent: () => {
 			console.log('logOutcomeEvent');
 		}
 	}; // healthbot metrics hook
-	window.session.logCustomEvent = function () { };
+	// window.session.logCustomEvent = function () { };
 	window.session.trace = function () { };
 
 	function getResource(url, callback) {
@@ -152,10 +151,10 @@ $(document).ready(() => {
 				console.log('Do something default when processing!');
 		}
 
-
 		// these resource objects contain localization data that needs to be remapped.
 		function doLocalizationMapping(obj) {
 			if (obj.localized) { return; }
+
 			for (const key in obj) {
 				if (Array.isArray(obj[`${key}`])) {
 					try {
@@ -171,6 +170,7 @@ $(document).ready(() => {
 						doLocalizationMapping(obj[`${key}`]);
 				}
 			}
+
 			obj.localized = true;
 		}
 
@@ -178,18 +178,11 @@ $(document).ready(() => {
 		if (scenario.dictionary && !scenario.dictionary.localized) doLocalizationMapping(scenario.dictionary);
 		if (scenario.state_list && !scenario.state_list.localized) doLocalizationMapping(scenario.state_list);
 
-
-
 		// if we have a next card
 		if (scenario.nextCard) {
 			if (card.type === 'prompt') return;
 
-			// const $btn = $(`<button>Next</button>`);
-			// $card.append($btn);
-			// $btn.focus();
-			// $btn.on('click', () => {
 			initNextStep(scenario.nextCard);
-			//});
 		}
 
 		// Optional callback
@@ -259,11 +252,6 @@ $(document).ready(() => {
 
 		}
 
-		// if(card.designer.next){
-		// 	const nextCard = scenario.scope.steps.filter(step => step.id === card.designer.next)[0];
-		// 	initNextStep(nextCard);
-		// }
-
 	}
 
 	// Initializes 'type: "prompt"' cards
@@ -301,25 +289,23 @@ $(document).ready(() => {
 			});
 		} else if (card.choiceType === 'multi-choice' && currentPrompt) {
 
-/*
-{
-  "id": "605e233e0f3f-697f7bccbc0bab5e-fd64",
-  "type": "prompt",
-  "dataType": "scenario.symptom_lists.ethnicity.text",
-  "designer": {
-    "xLocation": 1228,
-    "yLocation": 769,
-    "listStyle": 5,
-    "next": "138a202802d7-6ab8fc3a06db11f4-51a0"
-  },
-  "text": "scenario.questions.ethnicity_question",
-  "variable": "ethnicity",
-  "stringId": "stringId_4d064ea244c6a142",
-  "choiceType": "multi-choice",
-  "label": "Q44 ethnicity",
-  "submitTitle": "scenario.dictionary.submit_button"
-}
-*/
+			/*{
+				"id": "605e233e0f3f-697f7bccbc0bab5e-fd64",
+				"type": "prompt",
+				"dataType": "scenario.symptom_lists.ethnicity.text",
+				"designer": {
+					"xLocation": 1228,
+					"yLocation": 769,
+					"listStyle": 5,
+					"next": "138a202802d7-6ab8fc3a06db11f4-51a0"
+				},
+				"text": "scenario.questions.ethnicity_question",
+				"variable": "ethnicity",
+				"stringId": "stringId_4d064ea244c6a142",
+				"choiceType": "multi-choice",
+				"label": "Q44 ethnicity",
+				"submitTitle": "scenario.dictionary.submit_button"
+			}*/
 			currentPrompt.map((prompt, index) => {
 				let valueString = "0" + (index+1);
 				const $cbx = $(`<div style="display: flex; align-items: center;"><input id="${index}_${card.id}" type="checkbox" value="${valueString}" aria-label="${prompt}"><label class="" for="${index}_${card.id}"><p>${prompt}</p></label></div>`)
