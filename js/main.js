@@ -104,9 +104,19 @@ $(document).ready(() => {
 		const nextCard = steps.filter(step => step.id === card.designer.next)[0];
 		scenario['nextCard'] = nextCard;
 
-		$card.append(`<p><small><strong>Type:</strong> ${card.type} | <strong>Current ID:</strong> ${card.id} | <strong>Next ID:</strong> ${card.designer.next ? card.designer.next : 'endcap'}</small></p>`);
-		$root.find('.cards').find('.card').removeClass('is-active');
-		$card.addClass('is-active');
+		$card.append(`
+			<span class="card-icon"></span>
+			<div class="card-body">
+				${devMode ? `
+					<p><small> <strong>Type:</strong> ${card.type} | <strong>Current ID:</strong> ${card.id} | <strong>Next ID:</strong> ${card.designer.next ? card.designer.next : 'endcap'}
+					</small></p>
+				` : ''}
+			</div>
+		`);
+
+		// $card.append(`<p><small><strong>Type:</strong> ${card.type} | <strong>Current ID:</strong> ${card.id} | <strong>Next ID:</strong> ${card.designer.next ? card.designer.next : 'endcap'}</small></p>`);
+		// $root.find('.cards').find('.card').removeClass('is-active');
+		// $card.addClass('is-active');
 
 		if (devMode || card.type === 'prompt') {
 			$root.find('.cards').append($card);
@@ -121,8 +131,6 @@ $(document).ready(() => {
 			const prevCard = steps.filter(step => step.id === previousDomItem.attr('id'))[0];
 			scenario['prevCard'] = prevCard;
 		}
-
-		handleScrollToBottom();
 
 		console.log(`# ~~~~~~~~~~~~~~~~~~~~~~~ Initializing current "${card.type}" card...`, card);
 
@@ -186,6 +194,8 @@ $(document).ready(() => {
 
 		// if we have a next card
 		if (scenario.nextCard) {
+			handleScrollToBottom();
+
 			if (card.type === 'prompt') return;
 
 			initNextStep(scenario.nextCard);
@@ -241,7 +251,7 @@ $(document).ready(() => {
 		console.log(`Processing "${card.type}" card...`);
 
 		let currentDomElement = $(`[id="${card.id}"]`);
-		currentDomElement = $(currentDomElement[currentDomElement.length - 1]);
+		currentDomElement = $(currentDomElement[currentDomElement.length - 1]).find('.card-body');
 
 		if (card.text) {
 
@@ -269,7 +279,7 @@ $(document).ready(() => {
 		const currentPrompt = card.dataType !== 'object' ? safelyConvertEval(card.dataType) : null;
 
 		let currentDomElement = $(`[id="${card.id}"]`);
-		currentDomElement = $(currentDomElement[currentDomElement.length - 1]);
+		currentDomElement = $(currentDomElement[currentDomElement.length - 1]).find('.card-body');
 		currentDomElement.append(`<p>${currentText}</p>`);
 
 		if (!scenario[card.variable]) {
@@ -389,17 +399,21 @@ $(document).ready(() => {
 		// Create a AdaptiveCard instance
 		const adaptiveCard = new AdaptiveCards.AdaptiveCard();
 
-		// // Set its hostConfig property unless you want to use the default Host Config
-		// // Host Config defines the style and behavior of a card
-		// adaptiveCard.hostConfig = new AdaptiveCards.HostConfig({
-		// 	fontFamily: "Segoe UI, Helvetica Neue, sans-serif"
-		// 	// More host config options
-		// });
+		// Set its hostConfig property unless you want to use the default Host Config
+		// Host Config defines the style and behavior of a card
+		adaptiveCard.hostConfig = new AdaptiveCards.HostConfig({
+			fontFamily: "Segoe UI, Helvetica Neue, sans-serif",
+			// More host config options
+			spacing: {
+				"padding": 1
+			},
+		});
 
 		// Set the adaptive card's event handlers. onExecuteAction is invoked
 		// whenever an action is clicked in the card
 		adaptiveCard.onExecuteAction = function (action) {
-			scenario[card.variable] = {};
+			scenario[card.variable] = {};\
+
 			for (const key in action._processedData) {
 				scenario[card.variable][`${key}`] = action._processedData[`${key}`];
 			}
@@ -420,19 +434,25 @@ $(document).ready(() => {
 
 	function processUserResponse(card, target) {
 		let currentDomElement = $(`[id="${card.id}"]`);
-		currentDomElement = $(currentDomElement[currentDomElement.length - 1]);
-		const $card = $(`<li class="card card--response"></li>`);
+		currentDomElement = $(currentDomElement[currentDomElement.length - 1]).find('.card-body');
+		const $card = $(`
+			<li class="card card--response">
+				<div class="card-body"></div>
+				<span class="card-icon"></span>
+			</li>
+		`);
 
 		if(!Array.isArray(scenario[card.variable])){
-			$card.append(`<p>You said: ${target.text()}</p>`);
+			$card.find('.card-body').append(`<p>You said: ${target.text()}</p>`);
 		} else {
-			let selected=[];
+			let selected = [];
 			let checkedBoxes = document.getElementById(card.id).querySelectorAll('input:checked');
 			checkedBoxes.forEach((cbx, index) => {
 				selected.push($('label[for="'+ cbx.id+'"]')[0].innerText);
 			});
-			$card.append(`<p>You said: ${selected.join(",")}</p>`);
+			$card.find('.card-body').append(`<p>You said: ${selected.join(", ")}</p>`);
 		}
+
 		$root.find('.cards').append($card);
 	}
 
@@ -440,8 +460,8 @@ $(document).ready(() => {
 		return Function(`'use strict'; return (${stringToConvert})`)();
 	}
 
-	function handleScrollToBottom(speed) {
-		$("html, body").animate({ scrollTop: $(document).height() }, speed ? speed : 0);
+	function handleScrollToBottom() {
+		window.scrollTo(0, document.body.scrollHeight);
 	}
 
 });
