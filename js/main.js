@@ -406,10 +406,14 @@ $(document).ready(() => {
 		// Set its hostConfig property unless you want to use the default Host Config
 		// Host Config defines the style and behavior of a card
 		adaptiveCard.hostConfig = new AdaptiveCards.HostConfig({
-			fontFamily: "Segoe UI, Helvetica Neue, sans-serif",
+			// fontFamily: "Segoe UI, Helvetica Neue, sans-serif",
 			// More host config options
-			spacing: {
-				"padding": 1
+			"fontSizes": {
+				"small": 12,
+				"default": 16,
+				"medium": 18,
+				"large": 24,
+				"extraLarge": 32
 			},
 		});
 
