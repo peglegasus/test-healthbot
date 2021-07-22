@@ -105,7 +105,7 @@ $(document).ready(() => {
 		scenario['nextCard'] = nextCard;
 
 		$card.append(`
-			<span class="card-icon"></span>
+			<span class="card-icon">CDC</span>
 			<div class="card-body">
 				${devMode ? `
 					<p><small> <strong>Type:</strong> ${card.type} | <strong>Current ID:</strong> ${card.id} | <strong>Next ID:</strong> ${card.designer.next ? card.designer.next : 'endcap'}
@@ -118,7 +118,7 @@ $(document).ready(() => {
 		// $root.find('.cards').find('.card').removeClass('is-active');
 		// $card.addClass('is-active');
 
-		if (devMode || card.type === 'prompt') {
+		if (devMode || card.type === 'prompt' || card.type === 'statement') {
 			$root.find('.cards').append($card);
 		}
 
@@ -250,19 +250,21 @@ $(document).ready(() => {
 	function processStatementCard(card) {
 		console.log(`Processing "${card.type}" card...`);
 
-		let currentDomElement = $(`[id="${card.id}"]`);
+		let currentDomElement = $(`#${card.id}`);
 		currentDomElement = $(currentDomElement[currentDomElement.length - 1]).find('.card-body');
 
 		if (card.text) {
 
 			const currentText = safelyConvertEval(card.text);
-			var md = window.markdownit();
-			var result = md.render(currentText);
+			const md = window.markdownit();
+			const result = md.render(currentText);
+
 			currentDomElement.append(`<p>${result}</p>`);
 
 		} else if (card.attachment && card.attachment[0].type == 'AdaptiveCard') {
 
-			currentDomElement.append('<p>adaptiveCard:</p>');
+			if (devMode) currentDomElement.append('<p>adaptiveCard:</p>');
+			
 			const adaptiveCard = processAdaptiveContent(card);
 			currentDomElement.append(adaptiveCard);
 
@@ -294,11 +296,11 @@ $(document).ready(() => {
 				currentDomElement.append($btn);
 
 				$btn.on('click', (event) => {
-					const $target = $(event.target);
+					const target = $(event.target);
 
-					scenario[card.variable].index = parseInt($target.attr('value'));
+					scenario[card.variable].index = parseInt(target.attr('value'));
 
-					processUserResponse(card, $target);
+					processUserResponse(card, target);
 
 					initNextStep(scenario.nextCard);
 				});
@@ -340,8 +342,8 @@ $(document).ready(() => {
 					scenario[card.variable].push({index:cbx.value});
 				});
 
-				const $target = $(event.target);
-				processUserResponse(card, $target); // or here?
+				const target = $(event.target);
+				processUserResponse(card, target); // or here?
 				initNextStep(scenario.nextCard);
 			});
 			
@@ -412,7 +414,7 @@ $(document).ready(() => {
 		// Set the adaptive card's event handlers. onExecuteAction is invoked
 		// whenever an action is clicked in the card
 		adaptiveCard.onExecuteAction = function (action) {
-			scenario[card.variable] = {};\
+			scenario[card.variable] = {};
 
 			for (const key in action._processedData) {
 				scenario[card.variable][`${key}`] = action._processedData[`${key}`];
@@ -438,13 +440,15 @@ $(document).ready(() => {
 		const $card = $(`
 			<li class="card card--response">
 				<div class="card-body"></div>
-				<span class="card-icon"></span>
+				<span class="card-icon">You</span>
 			</li>
 		`);
 
 		if(!Array.isArray(scenario[card.variable])){
 			$card.find('.card-body').append(`<p>You said: ${target.text()}</p>`);
-		} else {
+		} else if (!target) {
+			debugger
+	 	} else {
 			let selected = [];
 			let checkedBoxes = document.getElementById(card.id).querySelectorAll('input:checked');
 			checkedBoxes.forEach((cbx, index) => {

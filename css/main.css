@@ -11,6 +11,7 @@ html {
 body {
 	font-family: 'Open Sans', sans-serif;
 	font-size: 1rem;
+	margin: 0;
 }
 
 ul {
@@ -36,6 +37,10 @@ button + button {
 	padding-left: 6px;
 }
 
+#root {
+	margin: 1rem;
+}
+
 .cards {
 	list-style-type: none;
 	padding-left: 0;
@@ -56,13 +61,22 @@ button + button {
 }
 
 .card-icon {
+	align-items: center;
 	background-color: #005eaa;
     border-radius: 100%;
-    display: block;
+    color: #fff;
+	display: flex;
+	font-size: 75%;
+    font-weight: bold;
 	height: 40px;
+    justify-content: center;
+	margin-top: 8px;
     min-height: 40px;
     min-width: 40px;
     width: 40px;
+}
+.card--response .card-icon {
+	background-color: #006778;
 }
 
 .card-body {
@@ -70,7 +84,7 @@ button + button {
     border: 1px solid;
     border-color: #e6e6e6;
     border-radius: 4px;
-    padding: 10px;
+    padding: 1rem;
     position: relative;
 }
 .card-body :first-child {
