@@ -62,7 +62,7 @@ button + button {
 
 .card-icon {
 	align-items: center;
-	background-color: #005eaa;
+	/* background-color: #005eaa; */
     border-radius: 100%;
     color: #fff;
 	display: flex;

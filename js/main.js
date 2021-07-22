@@ -1,5 +1,7 @@
 'use strict';
 
+const cdcLogo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 77 47"><path fill="#FFF" d="M2.9 2.2h69.6v42.5H2.9V2.2z"></path><path fill="#105EAB" d="M3.5 2.9h68.2V44H3.5V2.9z"></path><path fill="#FFF" d="M31.5 44L71.7 3.3v-.4h-.2L30.9 44h.6zM6.2 44L8.9 2.9h-.4L5.8 44h.4zm2.2 0l5.9-41.1h-.4L7.9 44h.5zm2.3 0l9.2-41.1h-.4L10.3 44h.4zm2.5 0L26.3 2.9h-.4L12.8 44h.4zm2.5 0L32.5 2.9H32L15.2 44h.5zm2.7 0L39.5 2.9H39L17.9 44h.5zM50 2.9h-.5L22.2 44h.5L50 2.9zm9.7 0h-.5L26 44h.5L59.7 2.9zm12 15.6V18L38.9 44h.7l32.1-25.5zm0 11.3v-.5L48.1 44h.8l22.8-14.2zm0 10.6V40L63 44h1l7.7-3.6z"></path><path fill="#FFF" d="M23.9 27.6c-.8.8-3 1.7-4.5 1.7-4.5 0-6.6-3.9-6.7-9.7 0-5.6 2.3-9.1 6.2-9.1 2.8 0 4.2 1.6 4.9 2.6l.8 1.1V9.1l-.2-.1c-1.6-.8-3.7-1.1-5.5-1.1-7 0-12.4 5.1-12.4 12.2 0 7.3 5.1 11.9 12.4 11.9 3.6 0 5.5-1.1 6.4-1.8l.3-.2-1.2-2.7-.5.3zm19.7-17.1c-2.4-1.7-5.3-2.2-7.8-2.2h-8.6v23.3h9.2c4.4 0 11.3-2.8 11.3-11.7 0-4.7-1.7-7.7-4.1-9.4zM32.9 28.8v-18c4.2.1 8.6.6 8.7 9.1-.1 8.2-4.7 8.8-8.7 8.9zm34.4-1.6l-.5.4c-.8.8-3 1.7-4.5 1.7-4.5 0-6.7-3.9-6.7-9.7 0-5.6 2.3-9.1 6.2-9.1 2.8 0 4.2 1.6 4.9 2.6l.8 1.1V9.1l-.1-.1c-1.6-.8-3.7-1.1-5.5-1.1-7 0-12.4 5.1-12.4 12.2 0 7.3 5.1 11.9 12.4 11.9h.1c3.6 0 5.4-1.1 6.4-1.8l.3-.2-1.4-2.8z"></path><path fill="#0033A0" d="M72.9 42.9h.8v.1h-.3v.9h-.1V43H73v-.1zm1.8 1V43l-.3.8h-.1L74 43v.8h-.1v-1h.2l.3.9.3-.9h.2v1h-.2v.1z"></path></svg>`;
+
 $(document).ready(() => {
 
 	// The root element we will put most of our magic in
@@ -105,7 +107,7 @@ $(document).ready(() => {
 		scenario['nextCard'] = nextCard;
 
 		$card.append(`
-			<span class="card-icon">CDC</span>
+			<span class="card-icon">${cdcLogo}</span>
 			<div class="card-body">
 				${devMode ? `
 					<p><small> <strong>Type:</strong> ${card.type} | <strong>Current ID:</strong> ${card.id} | <strong>Next ID:</strong> ${card.designer.next ? card.designer.next : 'endcap'}
