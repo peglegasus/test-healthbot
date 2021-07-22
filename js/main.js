@@ -260,8 +260,8 @@ $(document).ready(() => {
 			const currentText = safelyConvertEval(card.text);
 			const md = window.markdownit();
 			const result = md.render(currentText);
-
-			currentDomElement.append(`<p>${result}</p>`);
+			
+			currentDomElement.append(`${result}`);
 
 		} else if (card.attachment && card.attachment[0].type == 'AdaptiveCard') {
 
@@ -351,7 +351,6 @@ $(document).ready(() => {
 			
 		} else if (card.attachment && card.attachment[0].type === 'AdaptiveCard') {
 
-			currentDomElement.append('<p>adaptiveCard:</p>');
 			const adaptiveCard = processAdaptiveContent(card);
 			currentDomElement.append(adaptiveCard);
 
@@ -408,13 +407,16 @@ $(document).ready(() => {
 		adaptiveCard.hostConfig = new AdaptiveCards.HostConfig({
 			// fontFamily: "Segoe UI, Helvetica Neue, sans-serif",
 			// More host config options
-			"fontSizes": {
+			fontSizes: {
 				"small": 12,
 				"default": 16,
 				"medium": 18,
 				"large": 24,
 				"extraLarge": 32
 			},
+			spacing: {
+				"padding": "none"
+			}
 		});
 
 		// Set the adaptive card's event handlers. onExecuteAction is invoked
