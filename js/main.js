@@ -74,11 +74,11 @@ $(document).ready(() => {
 
 		// Clear root container
 		// This will remove the loader too
-		const cards = $root.find('.cards');
+		const cards = $root.find('.chatboxes');
 
 		if (cards.length < 1) {
 			$root.html(``);
-			$root.append(`<ul class="cards"></ul>`);
+			$root.append(`<ul class="chatboxes"></ul>`);
 		}
 
 		// Hit the first step
@@ -95,7 +95,7 @@ $(document).ready(() => {
 			2) An optional callback so we know when initialization is complete
 	*/
 	function initNextStep(card, vals, callback) {
-		const $card = $(`<li id="${card.id}" class="card" data-type="${card.type}"></li>`);
+		const $card = $(`<li id="${card.id}" class="chatbox" data-type="${card.type}"></li>`);
 		const steps = scenario[scenario.scope].steps;
 
 		// Set the current card
@@ -107,8 +107,8 @@ $(document).ready(() => {
 		scenario['nextCard'] = nextCard;
 
 		$card.append(`
-			<span class="card-icon">${cdcLogo}</span>
-			<div class="card-body">
+			<span class="chatbox-icon">${cdcLogo}</span>
+			<div class="chatbox-body">
 				${devMode ? `
 					<p><small> <strong>Type:</strong> ${card.type} | <strong>Current ID:</strong> ${card.id} | <strong>Next ID:</strong> ${card.designer.next ? card.designer.next : 'endcap'}
 					</small></p>
@@ -123,7 +123,7 @@ $(document).ready(() => {
 			(card.type === 'prompt' && card.attachment[0].type === 'AdaptiveCard') ||
 			(card.type === 'statement' && card.attachment[0].type === 'AdaptiveCard')
 		) {
-			$root.find('.cards').append($card);
+			$root.find('.chatboxes').append($card);
 		}
 
 		// Set the prev card
@@ -255,7 +255,7 @@ $(document).ready(() => {
 		console.log(`Processing "${card.type}" card...`);
 
 		let currentDomElement = $(`#${card.id}`);
-		currentDomElement = $(currentDomElement[currentDomElement.length - 1]).find('.card-body');
+		currentDomElement = $(currentDomElement[currentDomElement.length - 1]).find('.chatbox-body');
 
 		if (card.text) {
 
@@ -288,7 +288,7 @@ $(document).ready(() => {
 		const currentPrompt = card.dataType !== 'object' ? safelyConvertEval(card.dataType) : null;
 
 		let currentDomElement = $(`[id="${card.id}"]`);
-		currentDomElement = $(currentDomElement[currentDomElement.length - 1]).find('.card-body');
+		currentDomElement = $(currentDomElement[currentDomElement.length - 1]).find('.chatbox-body');
 		currentDomElement.append(`${result}`);
 
 		if (!scenario[card.variable]) {
@@ -298,7 +298,7 @@ $(document).ready(() => {
 		// If prompt is a 'choice' type : button list
 		if (card.choiceType === 'choice' && currentPrompt) {			
 			currentPrompt.map((prompt, index) => {
-				const $btn = $(`<button class="card-btn" value="${index}">${prompt} (${index})</button>`);
+				const $btn = $(`<button class="chatbox-btn" value="${index}">${prompt} (${index})</button>`);
 
 				currentDomElement.append($btn);
 
@@ -337,7 +337,7 @@ $(document).ready(() => {
 				currentDomElement.append($cbx);
 			});
 
-			const $btn = $(`<button>${scenario.dictionary.submit_button}</button>`);
+			const $btn = $(`<button class="chatbox-btn">${scenario.dictionary.submit_button}</button>`);
 
 			currentDomElement.append($btn);
 
@@ -454,26 +454,26 @@ $(document).ready(() => {
 
 	function processUserResponse(card, target) {
 		let currentDomElement = $(`[id="${card.id}"]`);
-		currentDomElement = $(currentDomElement[currentDomElement.length - 1]).find('.card-body');
+		currentDomElement = $(currentDomElement[currentDomElement.length - 1]).find('.chatbox-body');
 		const $card = $(`
-			<li class="card card--response">
-				<div class="card-body"></div>
-				<span class="card-icon">You</span>
+			<li class="chatbox chatbox--response">
+				<div class="chatbox-body"></div>
+				<span class="chatbox-icon">You</span>
 			</li>
 		`);
 
 		if(!Array.isArray(scenario[card.variable])){
-			$card.find('.card-body').append(`<p>You said: ${target.text()}</p>`);
+			$card.find('.chatbox-body').append(`<p>You said: ${target.text()}</p>`);
 	 	} else {
 			let selected = [];
 			let checkedBoxes = document.getElementById(card.id).querySelectorAll('input:checked');
 			checkedBoxes.forEach((cbx, index) => {
 				selected.push($('label[for="'+ cbx.id+'"]')[0].innerText);
 			});
-			$card.find('.card-body').append(`<p>You said: ${selected.join(", ")}</p>`);
+			$card.find('.chatbox-body').append(`<p>You said: ${selected.join(", ")}</p>`);
 		}
 
-		$root.find('.cards').append($card);
+		$root.find('.chatboxes').append($card);
 	}
 
 	function safelyConvertEval(stringToConvert) {
@@ -481,7 +481,10 @@ $(document).ready(() => {
 	}
 
 	function handleScrollToBottom() {
-		window.scrollTo(0, document.body.scrollHeight);
+		// window.scrollTo(0, document.body.scrollHeight);
+		$('html, body').animate({
+			scrollTop: 99999
+		}, 5000);
 	}
 
 });

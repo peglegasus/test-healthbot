@@ -1,3 +1,6 @@
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	START CUSTOM STYLES & OVERRIDES
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 html {
 	box-sizing: border-box;
 }
@@ -13,6 +16,13 @@ body {
 	font-size: 1rem;
 	line-height: 1.45;
 	margin: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: Calibri, "Helvetica Neue", Arial, sans-serif;
+	font-weight: 700;
+	margin-bottom: 1rem;
+	margin-top: 1rem;
 }
 
 ul {
@@ -36,32 +46,32 @@ button {
 	margin: 10px;
 }
 
-.cards {
+.chatboxes {
 	list-style-type: none;
 	padding-left: 0;
 }
 
-.card {
+.chatbox {
 	display: flex;
 	width: auto;
 }
-/* When a .card is next to another */
-.card + .card {
+/* When a .chatbox is next to another */
+.chatbox + .chatbox {
 	margin-top: 10px;
 }
-/* When a .card are next to a .card--response || vice versa */
-.card:not(.card--response) + .card--response,
-.card--response + .card:not(.card--response) {
+/* When a .chatbox are next to a .chatbox--response || vice versa */
+.chatbox:not(.chatbox--response) + .chatbox--response,
+.chatbox--response + .chatbox:not(.chatbox--response) {
 	margin-top: 20px;
 }
-.card.is-active {
+.chatbox.is-active {
 	background-color: #74ea63;
 }
-.card--response {
+.chatbox--response {
 	justify-content: flex-end;
 }
 
-.card-icon {
+.chatbox-icon {
 	align-items: center;
 	/* background-color: #005eaa; */
     border-radius: 100%;
@@ -76,12 +86,12 @@ button {
     min-width: 40px;
     width: 40px;
 }
-.card--response .card-icon {
+.chatbox--response .chatbox-icon {
 	background-color: #006778;
 	margin-top: 0;
 }
 
-.card-body {
+.chatbox-body {
 	background-color: #fff;
     border: 1px solid;
     border-color: #e6e6e6;
@@ -89,18 +99,18 @@ button {
     padding: 10px;
     position: relative;
 }
-.card-body :first-child {
+.chatbox-body :first-child {
 	margin-top: 0;
 }
-.card-body :last-child {
+.chatbox-body :last-child {
 	margin-bottom: 0;
 }
-.card-icon + .card-body,
-.card-body + .card-icon {
+.chatbox-icon + .chatbox-body,
+.chatbox-body + .chatbox-icon {
 	margin-left: 10px;
 }
 
-.card-btn,
+.chatbox-btn,
 .ac-pushButton {
 	background-color: #fff;
     border-style: solid;
@@ -111,19 +121,19 @@ button {
 	padding: 10px 16px;
 	width: 100%;
 }
-.card-btn:focus,
-.card-btn:hover,
+.chatbox-btn:focus,
+.chatbox-btn:hover,
 .ac-pushButton:focus,
 .ac-pushButton:hover {
 	background-color: #005eaa;
 	color: #fff;
 }
-.card-btn:active,
+.chatbox-btn:active,
 .ac-pushButton:active {
 	border-color: #333;
 	outline: 1px solid #333;
 }
-.card-btn + .card-btn,
+.chatbox-btn + .chatbox-btn,
 .ac-pushButton + .ac-pushButton {
-	margin-top: 8px;
+	margin-top: 6px;
 }
