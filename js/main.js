@@ -112,13 +112,9 @@ $(document).ready(() => {
 				${devMode ? `
 					<p><small> <strong>Type:</strong> ${card.type} | <strong>Current ID:</strong> ${card.id} | <strong>Next ID:</strong> ${card.designer.next ? card.designer.next : 'endcap'}
 					</small></p>
-				` : ''}
+				` : ``}
 			</div>
 		`);
-
-		// $card.append(`<p><small><strong>Type:</strong> ${card.type} | <strong>Current ID:</strong> ${card.id} | <strong>Next ID:</strong> ${card.designer.next ? card.designer.next : 'endcap'}</small></p>`);
-		// $root.find('.cards').find('.card').removeClass('is-active');
-		// $card.addClass('is-active');
 
 		if (
 			devMode ||
@@ -126,7 +122,7 @@ $(document).ready(() => {
 			card.type === 'statement' ||
 			(card.type === 'prompt' && card.attachment[0].type === 'AdaptiveCard') ||
 			(card.type === 'statement' && card.attachment[0].type === 'AdaptiveCard')
-		){
+		) {
 			$root.find('.cards').append($card);
 		}
 
@@ -207,12 +203,6 @@ $(document).ready(() => {
 			if (card.type === 'prompt') return;
 
 			initNextStep(scenario.nextCard);
-		} else {
-			$card.append(`
-				<div class="card-body">
-					<p>End cap</p>
-				</div>
-			`);
 		}
 
 		// Optional callback
@@ -305,7 +295,7 @@ $(document).ready(() => {
 		// If prompt is a 'choice' type : button list
 		if (card.choiceType === 'choice' && currentPrompt) {			
 			currentPrompt.map((prompt, index) => {
-				const $btn = $(`<button value="${index}">${prompt} (${index})</button>`);
+				const $btn = $(`<button class="card-btn" value="${index}">${prompt} (${index})</button>`);
 
 				currentDomElement.append($btn);
 

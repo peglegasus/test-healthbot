@@ -9,7 +9,7 @@
    \______)_____/  \______)
 ```
 
-Custom parser for interpretting Self-Checker JSON exports.
+Custom parser for interpretting Self-Checker JSON exports. UI styles are driven by CDC's Template Package version 4.
 
 ## Developers:
 

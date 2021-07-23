@@ -11,6 +11,7 @@ html {
 body {
 	font-family: 'Open Sans', sans-serif;
 	font-size: 1rem;
+	line-height: 1.45;
 	margin: 0;
 }
 
@@ -19,14 +20,8 @@ ul {
 }
 
 button {
-	background-color: #fff;
-    border: 2px solid #333;
-    border-radius: 4px;
 	cursor: pointer;
-	padding: 10px 16px;
-}
-button + button {
-	margin-left: 8px;
+	font-size: inherit;
 }
 
 .ac-input {
@@ -38,7 +33,7 @@ button + button {
 }
 
 #root {
-	margin: 1rem;
+	margin: 10px;
 }
 
 .cards {
@@ -77,14 +72,15 @@ button + button {
 }
 .card--response .card-icon {
 	background-color: #006778;
+	margin-top: 0;
 }
 
 .card-body {
 	background-color: #fff;
     border: 1px solid;
-    border-color: #dedede;
-    border-radius: 4px;
-    padding: 1rem;
+    border-color: #e6e6e6;
+    border-radius: 2px;
+    padding: 10px;
     position: relative;
 }
 .card-body :first-child {
@@ -95,5 +91,33 @@ button + button {
 }
 .card-icon + .card-body,
 .card-body + .card-icon {
-	margin-left: 1rem;
+	margin-left: 10px;
+}
+
+.card-btn,
+.ac-pushButton {
+	background-color: #fff;
+    border-style: solid;
+	border-width: 1px;
+	color: #0063b1;
+	display: block;
+	outline: 2px solid transparent;
+	padding: 10px 16px;
+	width: 100%;
+}
+.card-btn:focus,
+.card-btn:hover,
+.ac-pushButton:focus,
+.ac-pushButton:hover {
+	background-color: #005eaa;
+	color: #fff;
+}
+.card-btn:active,
+.ac-pushButton:active {
+	border-color: #333;
+	outline: 1px solid #333;
+}
+.card-btn + .card-btn,
+.ac-pushButton + .ac-pushButton {
+	margin-top: 8px;
 }
