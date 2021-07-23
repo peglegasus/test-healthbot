@@ -94,7 +94,9 @@ $(document).ready(() => {
 			2) Data we want to pass back and do some calculations
 			2) An optional callback so we know when initialization is complete
 	*/
-	function initNextStep(card, vals, callback) {
+	function initNextStep(card, callback) {
+		handleScrollToBottom();
+
 		const $card = $(`<li id="${card.id}" class="chatbox" data-type="${card.type}"></li>`);
 		const steps = scenario[scenario.scope].steps;
 
@@ -124,6 +126,7 @@ $(document).ready(() => {
 			(card.type === 'statement' && card.attachment[0].type === 'AdaptiveCard')
 		) {
 			$root.find('.chatboxes').append($card);
+
 		}
 
 		// Set the prev card
@@ -198,7 +201,6 @@ $(document).ready(() => {
 
 		// if we have a next card
 		if (scenario.nextCard) {
-			handleScrollToBottom();
 
 			if (card.type === 'prompt') return;
 
@@ -428,6 +430,8 @@ $(document).ready(() => {
 		// onExecuteAction is invoked whenever an action is clicked in the card
 		// Provide an onExecuteAction handler to handle the Action.Submit
 		adaptiveCard.onExecuteAction = (action) => {
+			handleScrollToBottom();
+
 			scenario[card.variable] = {};
 
 			for (const key in action._processedData) {
@@ -435,11 +439,7 @@ $(document).ready(() => {
 			}
 
 			// // Scroll to bottom after nextStep completed
-			initNextStep(scenario.nextCard, () => {
-
-				handleScrollToBottom();
-
-			});
+			initNextStep(scenario.nextCard);
 		}
 
 		// Parse the card payload
@@ -456,7 +456,7 @@ $(document).ready(() => {
 		let currentDomElement = $(`[id="${card.id}"]`);
 		currentDomElement = $(currentDomElement[currentDomElement.length - 1]).find('.chatbox-body');
 		const $card = $(`
-			<li class="chatbox chatbox--response">
+			<li class="chatbox chatbox--response" data-type="response">
 				<div class="chatbox-body"></div>
 				<span class="chatbox-icon">You</span>
 			</li>
@@ -481,10 +481,26 @@ $(document).ready(() => {
 	}
 
 	function handleScrollToBottom() {
+		const cards = $('.chatboxes').children('.chatbox');
+		const lastCard = cards[cards.length - 1];
+
 		// window.scrollTo(0, document.body.scrollHeight);
-		$('html, body').animate({
-			scrollTop: 99999
-		}, 5000);
+		
+		if (lastCard) {
+			$('html, body').animate({
+				scrollTop: $(lastCard).offset().top + $(lastCard).outerHeight()
+			}, 200);
+		}
+
+
+		// const lastCard = cards[cards.length - 1];
+		// console.log( $(cards[0]).offset().top );
+
+		// window.scrollTo(0, document.body.scrollHeight);
+
+		// $('html, body').animate({
+		// 	scrollTop: lastCard.offset().top + lastCard.outerHeight()
+		// }, 125)
 	}
 
 });
