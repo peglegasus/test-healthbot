@@ -82,7 +82,7 @@ button + button {
 .card-body {
 	background-color: #fff;
     border: 1px solid;
-    border-color: #e6e6e6;
+    border-color: #dedede;
     border-radius: 4px;
     padding: 1rem;
     position: relative;

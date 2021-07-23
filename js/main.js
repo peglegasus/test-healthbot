@@ -419,16 +419,22 @@ $(document).ready(() => {
 			}
 		});
 
-		// Set the adaptive card's event handlers. onExecuteAction is invoked
-		// whenever an action is clicked in the card
-		adaptiveCard.onExecuteAction = function (action) {
+		// Set the adaptive card's event handlers.
+		// onExecuteAction is invoked whenever an action is clicked in the card
+		// Provide an onExecuteAction handler to handle the Action.Submit
+		adaptiveCard.onExecuteAction = (action) => {
 			scenario[card.variable] = {};
 
 			for (const key in action._processedData) {
 				scenario[card.variable][`${key}`] = action._processedData[`${key}`];
 			}
 
-			initNextStep(scenario.nextCard);
+			// // Scroll to bottom after nextStep completed
+			initNextStep(scenario.nextCard, () => {
+
+				handleScrollToBottom();
+
+			});
 		}
 
 		// Parse the card payload
@@ -438,7 +444,6 @@ $(document).ready(() => {
 		const renderedCard = adaptiveCard.render();
 
 		// And finally insert it somewhere in your page:
-		// console.log(renderedCard)
 		return renderedCard
 	}
 
@@ -454,8 +459,6 @@ $(document).ready(() => {
 
 		if(!Array.isArray(scenario[card.variable])){
 			$card.find('.card-body').append(`<p>You said: ${target.text()}</p>`);
-		} else if (!target) {
-			debugger
 	 	} else {
 			let selected = [];
 			let checkedBoxes = document.getElementById(card.id).querySelectorAll('input:checked');
