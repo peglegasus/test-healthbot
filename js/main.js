@@ -298,7 +298,7 @@ $(document).ready(() => {
 		// If prompt is a 'choice' type : button list
 		if (card.choiceType === 'choice' && currentPrompt) {			
 			currentPrompt.map((prompt, index) => {
-				const $btn = $(`<button class="chatbox-btn" value="${index}">${prompt} (${index})</button>`);
+				const $btn = $(`<button class="chatbox-btn" value="${index}">${prompt}</button>`);
 
 				currentDomElement.append($btn);
 
