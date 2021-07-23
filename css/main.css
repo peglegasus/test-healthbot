@@ -1,6 +1,15 @@
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	START CUSTOM STYLES & OVERRIDES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+:root {
+	--blue: #0063b1;
+	--teal: #006778;
+	--white: #fff;
+	--light: #e6e6e6;
+	--dark: #333;
+	--black: #000;
+}
+
 html {
 	box-sizing: border-box;
 }
@@ -19,7 +28,6 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-	font-family: Calibri, "Helvetica Neue", Arial, sans-serif;
 	font-weight: 700;
 	margin-bottom: 1rem;
 	margin-top: 1rem;
@@ -67,9 +75,6 @@ button {
 .chatbox--response + .chatbox:not(.chatbox--response) {
 	margin-top: 20px;
 }
-.chatbox.is-active {
-	background-color: #74ea63;
-}
 .chatbox--response {
 	justify-content: flex-end;
 }
@@ -78,7 +83,7 @@ button {
 	align-items: center;
 	/* background-color: #005eaa; */
     border-radius: 100%;
-    color: #fff;
+    color: var(--white);
 	display: flex;
 	font-size: 75%;
     font-weight: bold;
@@ -90,14 +95,14 @@ button {
     width: 40px;
 }
 .chatbox--response .chatbox-icon {
-	background-color: #006778;
+	background-color: var(--teal);
 	margin-top: 0;
 }
 
 .chatbox-body {
-	background-color: #fff;
+	background-color: var(--white);
     border: 1px solid;
-    border-color: #e6e6e6;
+    border-color: var(--light);
     border-radius: 2px;
     padding: 10px;
     position: relative;
@@ -115,10 +120,10 @@ button {
 
 .chatbox-btn,
 .ac-pushButton {
-	background-color: #fff;
+	background-color: var(--white);
     border-style: solid;
 	border-width: 1px;
-	color: #0063b1;
+	color: var(--blue);
 	display: block;
 	outline: 2px solid transparent;
 	padding: 10px 16px;
@@ -128,13 +133,13 @@ button {
 .chatbox-btn:hover,
 .ac-pushButton:focus,
 .ac-pushButton:hover {
-	background-color: #005eaa;
-	color: #fff;
+	background-color: var(--blue);
+	color: var(--white);
 }
 .chatbox-btn:active,
 .ac-pushButton:active {
-	border-color: #333;
-	outline: 1px solid #333;
+	border-color: var(--dark);
+	outline: 1px solid var(--dark);
 }
 .chatbox-btn + .chatbox-btn,
 .ac-pushButton + .ac-pushButton {

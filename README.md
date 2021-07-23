@@ -27,6 +27,7 @@ Custom parser for interpretting JSON exports from CDC's Self-Checker health bot.
 ## Dependencies
 
 - CDC Template Package v4
+- Local web server (http-server, Python, etc)
 
 ## Getting Started:
 
