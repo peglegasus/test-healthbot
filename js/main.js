@@ -282,11 +282,14 @@ $(document).ready(() => {
 		console.log(`Processing "${card.type}" card...`);
 
 		const currentText = safelyConvertEval(card.text);
+		const md = window.markdownit();
+		const result = md.render(currentText);
+
 		const currentPrompt = card.dataType !== 'object' ? safelyConvertEval(card.dataType) : null;
 
 		let currentDomElement = $(`[id="${card.id}"]`);
 		currentDomElement = $(currentDomElement[currentDomElement.length - 1]).find('.card-body');
-		currentDomElement.append(`<p>${currentText}</p>`);
+		currentDomElement.append(`${result}`);
 
 		if (!scenario[card.variable]) {
 			scenario[card.variable] = {};
