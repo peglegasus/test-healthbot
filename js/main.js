@@ -120,7 +120,13 @@ $(document).ready(() => {
 		// $root.find('.cards').find('.card').removeClass('is-active');
 		// $card.addClass('is-active');
 
-		if (devMode || card.type === 'prompt' || card.type === 'statement') {
+		if (
+			devMode ||
+			card.type === 'prompt' ||
+			card.type === 'statement' ||
+			(card.type === 'prompt' && card.attachment[0].type === 'AdaptiveCard') ||
+			(card.type === 'statement' && card.attachment[0].type === 'AdaptiveCard')
+		){
 			$root.find('.cards').append($card);
 		}
 
@@ -201,6 +207,12 @@ $(document).ready(() => {
 			if (card.type === 'prompt') return;
 
 			initNextStep(scenario.nextCard);
+		} else {
+			$card.append(`
+				<div class="card-body">
+					<p>End cap</p>
+				</div>
+			`);
 		}
 
 		// Optional callback
