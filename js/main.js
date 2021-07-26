@@ -17,7 +17,7 @@ $(document).ready(() => {
 	}
 
 	// Flag to turn on/off development mode
-	window.devMode = false;
+	window.devMode = true;
 	
 	window.scenario = window.scenario || {};
 	window.scenario.lang = 'en-us'; // set to english by default - TODO: figure out localization later
@@ -172,29 +172,7 @@ $(document).ready(() => {
 				console.log('Do something default when processing!');
 		}
 
-		// these resource objects contain localization data that needs to be remapped.
-		function doLocalizationMapping(obj) {
-			if (obj.localized) { return; }
-
-			for (const key in obj) {
-				if (Array.isArray(obj[`${key}`])) {
-					try {
-						if (obj[`${key}`][0]) {
-							let mapped = obj[`${key}`][0][scenario.lang];
-							obj[`${key}`] = mapped;
-						}
-					} catch (error) {
-						console.log(`failed to set: ${key}`);
-					}
-				} else {
-					if (typeof obj[`${key}`] === 'object' && obj[`${key}`] !== null)
-						doLocalizationMapping(obj[`${key}`]);
-				}
-			}
-
-			obj.localized = true;
-		}
-
+		// these resource objects contain localization data that needs to be remapped.		
 		if (scenario.messages && !scenario.messages.localized) doLocalizationMapping(scenario.messages);
 		if (scenario.dictionary && !scenario.dictionary.localized) doLocalizationMapping(scenario.dictionary);
 		if (scenario.state_list && !scenario.state_list.localized) doLocalizationMapping(scenario.state_list);
@@ -442,6 +420,9 @@ $(document).ready(() => {
 			initNextStep(scenario.nextCard);
 		}
 
+
+		doLocalizationMapping(cardCode);
+
 		// Parse the card payload
 		adaptiveCard.parse(cardCode);
 
@@ -474,6 +455,31 @@ $(document).ready(() => {
 		}
 
 		$root.find('.chatboxes').append($card);
+	}
+
+	function doLocalizationMapping(obj) {
+		if (obj.localized) { return; }
+
+		for (const key in obj) {
+			if (Array.isArray(obj[`${key}`])) {
+				try {
+					if (obj[`${key}`][0] && obj[`${key}`][0].hasOwnProperty(scenario.lang)) {
+						let mapped = obj[`${key}`][0][scenario.lang];
+						obj[`${key}`] = mapped;
+					} else {
+						console.log(obj[`${key}`]);
+						doLocalizationMapping(obj[`${key}`]);						
+					}
+				} catch (error) {
+					console.log(`failed to set: ${key}`);
+				}
+			} else {
+				if (typeof obj[`${key}`] === 'object' && obj[`${key}`] !== null)
+					doLocalizationMapping(obj[`${key}`]);
+			}
+		}
+
+		obj.localized = true;
 	}
 
 	function safelyConvertEval(stringToConvert) {
