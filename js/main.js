@@ -17,7 +17,7 @@ $(document).ready(() => {
 	}
 
 	// Flag to turn on/off development mode
-	window.devMode = true;
+	window.devMode = false;
 	
 	window.scenario = window.scenario || {};
 	window.scenario.lang = 'en-us'; // set to english by default - TODO: figure out localization later
@@ -252,6 +252,10 @@ $(document).ready(() => {
 			const adaptiveCard = processAdaptiveContent(card);
 			currentDomElement.append(adaptiveCard);
 
+			const ro = new ResizeObserver(() => {console.log('resize ocurred');handleScrollToBottom();});
+			ro.observe(adaptiveCard);
+
+
 		}
 
 	}
@@ -339,6 +343,10 @@ $(document).ready(() => {
 			const adaptiveCard = processAdaptiveContent(card);
 			currentDomElement.append(adaptiveCard);
 
+			const ro = new ResizeObserver(() => {console.log('resize ocurred');handleScrollToBottom();});
+			ro.observe(adaptiveCard);
+
+
 		}
 	}
 
@@ -408,6 +416,7 @@ $(document).ready(() => {
 		// onExecuteAction is invoked whenever an action is clicked in the card
 		// Provide an onExecuteAction handler to handle the Action.Submit
 		adaptiveCard.onExecuteAction = (action) => {
+			
 			handleScrollToBottom();
 
 			scenario[card.variable] = {};
@@ -467,7 +476,7 @@ $(document).ready(() => {
 						let mapped = obj[`${key}`][0][scenario.lang];
 						obj[`${key}`] = mapped;
 					} else {
-						console.log(obj[`${key}`]);
+						//console.log(obj[`${key}`]);
 						doLocalizationMapping(obj[`${key}`]);						
 					}
 				} catch (error) {
