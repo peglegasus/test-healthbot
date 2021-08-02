@@ -18,12 +18,13 @@ $(document).ready(() => {
 
 	// Flag to turn on/off development mode
 	window.devMode = false;
-	
+	window.pause = 1000;
+
 	window.scenario = window.scenario || {};
 	window.scenario.lang = 'en-us'; // set to english by default - TODO: figure out localization later
 	window.customLocalizedStrings = [];
 	window.conversation = window.conversation || {}; // healthbot conversation log
-	
+
 	// Custom session events we arent sure of yet
 	// Possible healthbot metrics hook
 	window.session = window.session || {};
@@ -79,11 +80,11 @@ $(document).ready(() => {
 		if (cards.length < 1) {
 			$root.html(``);
 			$root.append(`<ul class="chatboxes"></ul>`);
+			$root.append(`<div class="newMessage">New Message Below</div>`);
 		}
 
 		// Hit the first step
 		console.log('Starting HealthBot steps...');
-
 		initNextStep(scenario[scenario.scope].steps[0]);
 	}
 
@@ -95,7 +96,8 @@ $(document).ready(() => {
 			2) An optional callback so we know when initialization is complete
 	*/
 	function initNextStep(card, callback) {
-		handleScrollToBottom();
+
+		//scrollToBottom();
 
 		const $card = $(`<li id="${card.id}" class="chatbox" data-type="${card.type}"></li>`);
 		const steps = scenario[scenario.scope].steps;
@@ -242,27 +244,23 @@ $(document).ready(() => {
 			const currentText = safelyConvertEval(card.text);
 			const md = window.markdownit();
 			const result = md.render(currentText);
-			
+
 			currentDomElement.append(`${result}`);
+			scrollToBottom();
 
 		} else if (card.attachment && card.attachment[0].type == 'AdaptiveCard') {
 
 			if (devMode) currentDomElement.append('<p>adaptiveCard:</p>');
-			
+
 			const adaptiveCard = processAdaptiveContent(card);
 			currentDomElement.append(adaptiveCard);
-
-			const ro = new ResizeObserver(() => {console.log('resize ocurred');handleScrollToBottom();});
-			ro.observe(adaptiveCard);
-
 
 		}
 
 	}
-
 	// Initializes 'type: "prompt"' cards
 	function processPromptCard(card) {
-	
+
 		console.log(`Processing "${card.type}" card...`);
 
 		const currentText = safelyConvertEval(card.text);
@@ -280,7 +278,7 @@ $(document).ready(() => {
 		}
 
 		// If prompt is a 'choice' type : button list
-		if (card.choiceType === 'choice' && currentPrompt) {			
+		if (card.choiceType === 'choice' && currentPrompt) {
 			currentPrompt.map((prompt, index) => {
 				const $btn = $(`<button class="chatbox-btn" value="${index}">${prompt}</button>`);
 
@@ -291,32 +289,20 @@ $(document).ready(() => {
 
 					scenario[card.variable].index = parseInt(target.attr('value'));
 
-					processUserResponse(card, target);
+					setTimeout(function () {
+						processUserResponse(card, target);
+						scrollToBottom();
 
-					initNextStep(scenario.nextCard);
+						setTimeout(function () {
+							initNextStep(scenario.nextCard);
+						}, window.pause);
+					}, window.pause);
 				});
 			});
 		} else if (card.choiceType === 'multi-choice' && currentPrompt) {
 
-			/*{
-				"id": "605e233e0f3f-697f7bccbc0bab5e-fd64",
-				"type": "prompt",
-				"dataType": "scenario.symptom_lists.ethnicity.text",
-				"designer": {
-					"xLocation": 1228,
-					"yLocation": 769,
-					"listStyle": 5,
-					"next": "138a202802d7-6ab8fc3a06db11f4-51a0"
-				},
-				"text": "scenario.questions.ethnicity_question",
-				"variable": "ethnicity",
-				"stringId": "stringId_4d064ea244c6a142",
-				"choiceType": "multi-choice",
-				"label": "Q44 ethnicity",
-				"submitTitle": "scenario.dictionary.submit_button"
-			}*/
 			currentPrompt.map((prompt, index) => {
-				let valueString = "0" + (index+1);
+				let valueString = "0" + (index + 1);
 				const $cbx = $(`<div style="display: flex; align-items: center;"><input id="${index}_${card.id}" type="checkbox" value="${valueString}" aria-label="${prompt}"><label class="" for="${index}_${card.id}"><p>${prompt}</p></label></div>`)
 				currentDomElement.append($cbx);
 			});
@@ -329,25 +315,39 @@ $(document).ready(() => {
 				scenario[card.variable] = [];
 
 				var checkedBoxes = document.getElementById(card.id).querySelectorAll('input:checked');
-				checkedBoxes.forEach((cbx, index)=>{
-					scenario[card.variable].push({index:cbx.value});
+				checkedBoxes.forEach((cbx, index) => {
+					scenario[card.variable].push({ index: cbx.value });
 				});
 
 				const target = $(event.target);
-				processUserResponse(card, target); // or here?
-				initNextStep(scenario.nextCard);
+
+				setTimeout(function () {
+					processUserResponse(card, target);
+					scrollToBottom();
+
+					setTimeout(function () {
+						initNextStep(scenario.nextCard);
+					}, window.pause);
+				}, window.pause);
+
 			});
-			
+
 		} else if (card.attachment && card.attachment[0].type === 'AdaptiveCard') {
 
 			const adaptiveCard = processAdaptiveContent(card);
 			currentDomElement.append(adaptiveCard);
 
-			const ro = new ResizeObserver(() => {console.log('resize ocurred');handleScrollToBottom();});
+			// this is added in to trigger the scrolltobottom when the size of the card changes - the adaptive
+			// cards do some dynamic things that might affect their size. eg. ZIP Code card.
+			const ro = new ResizeObserver(() => {
+				console.log('resize ocurred');
+				scrollToBottom();
+			});
 			ro.observe(adaptiveCard);
 
 
 		}
+		scrollToBottom();
 	}
 
 	function processBranchCard(card) {
@@ -416,11 +416,10 @@ $(document).ready(() => {
 		// onExecuteAction is invoked whenever an action is clicked in the card
 		// Provide an onExecuteAction handler to handle the Action.Submit
 		adaptiveCard.onExecuteAction = (action) => {
-			
-			handleScrollToBottom();
+
+			scrollToBottom();
 
 			scenario[card.variable] = {};
-
 			for (const key in action._processedData) {
 				scenario[card.variable][`${key}`] = action._processedData[`${key}`];
 			}
@@ -452,13 +451,13 @@ $(document).ready(() => {
 			</li>
 		`);
 
-		if(!Array.isArray(scenario[card.variable])){
+		if (!Array.isArray(scenario[card.variable])) {
 			$card.find('.chatbox-body').append(`<p>You said: ${target.text()}</p>`);
-	 	} else {
+		} else {
 			let selected = [];
 			let checkedBoxes = document.getElementById(card.id).querySelectorAll('input:checked');
 			checkedBoxes.forEach((cbx, index) => {
-				selected.push($('label[for="'+ cbx.id+'"]')[0].innerText);
+				selected.push($('label[for="' + cbx.id + '"]')[0].innerText);
 			});
 			$card.find('.chatbox-body').append(`<p>You said: ${selected.join(", ")}</p>`);
 		}
@@ -477,7 +476,7 @@ $(document).ready(() => {
 						obj[`${key}`] = mapped;
 					} else {
 						//console.log(obj[`${key}`]);
-						doLocalizationMapping(obj[`${key}`]);						
+						doLocalizationMapping(obj[`${key}`]);
 					}
 				} catch (error) {
 					console.log(`failed to set: ${key}`);
@@ -495,27 +494,46 @@ $(document).ready(() => {
 		return Function(`'use strict'; return (${stringToConvert})`)();
 	}
 
-	function handleScrollToBottom() {
-		const cards = $('.chatboxes').children('.chatbox');
-		const lastCard = cards[cards.length - 1];
+	function scrollToBottom() {
 
-		// window.scrollTo(0, document.body.scrollHeight);
-		
-		if (lastCard) {
-			$('html, body').animate({
-				scrollTop: $(lastCard).offset().top + $(lastCard).outerHeight()
-			}, 200);
+		if (!$('.chatbox').last()[0]) { return; }
+		if (!$('.chatbox--response').last()[0]) { return; }
+
+		// clear focus if IE
+		if (window.navigator.userAgent.match(/(MSIE|Trident)/)) {
+			$('.chatbox').last().focus();
 		}
 
+		// working with location of last repsonse
+		let lastResponseBottom = $('.chatbox--response').last()[0].getBoundingClientRect().top + 45;
 
-		// const lastCard = cards[cards.length - 1];
-		// console.log( $(cards[0]).offset().top );
+		//if (!interruptAutoScroll) {// displaying single output
+		if (lastResponseBottom > 0) {
+			console.log('autoscrolling to end');
+			$("html, body").animate({ scrollTop: $(document).height() }, 0);
+		} else {
+			console.log('autoscrolling to top of last');
+			let scrollto = $('.chatbox--response').last().offset().top + 45;
+			$("html, body").animate({ scrollTop: scrollto }, 0);
+		}
+		//$('.chatbox').last().focus();
 
-		// window.scrollTo(0, document.body.scrollHeight);
 
-		// $('html, body').animate({
-		// 	scrollTop: lastCard.offset().top + lastCard.outerHeight()
-		// }, 125)
+		// new message below button
+		var vpHeight = window.innerHeight || 0;
+		let $newMessageBelow = $(".newMessage");
+		//if (vpHeight < lastBoxHeight) {
+		$newMessageBelow.css('top', vpHeight - 48 + 'px');
+		$newMessageBelow.show();
+		$newMessageBelow.off().on('click', function () {
+			$("html, body").animate({ scrollTop: $(document).height() }, 400);
+			$newMessageBelow.hide();
+		});
+		//}
+
 	}
+
+
+
 
 });
