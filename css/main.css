@@ -80,7 +80,7 @@ button {
 /* When a .chatbox are next to a .chatbox--response || vice versa */
 .chatbox:not(.chatbox--response) + .chatbox--response,
 .chatbox--response + .chatbox:not(.chatbox--response) {
-	margin-top: 20px;
+	margin-top: 30px;
 }
 .chatbox--response {
 	justify-content: flex-end;
