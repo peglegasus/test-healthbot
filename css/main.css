@@ -57,6 +57,11 @@ button {
 	padding: 10px;
 }
 
+#root button.disabled {
+	background-color: #999;
+	color:var(--black)
+}
+
 .spinner {
 	left: 50%;
 	position: absolute;

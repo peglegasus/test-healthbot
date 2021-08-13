@@ -1,0 +1,42 @@
+.boxsizingBorder {
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.row {
+    display: flex;
+  }
+  
+  .column {
+    flex: 50%;
+  }
+
+  .testPanel{
+      position: fixed;
+      background-color: beige;
+      width:100%;      
+  }
+
+  .testPanel>div{
+      padding:5px;
+  }
+
+  .pathList, .taskList{
+      margin:5px;
+      border:1px solid black;
+      overflow:auto;
+      width:45%;
+      height:200px;
+    }
+
+  .pathList .listItem, .taskList .listItem {
+    white-space: nowrap;    
+    margin:1px;
+  }
+
+  .listItem.light { background-color: white;}
+  .listItem.dark { background-color:lightsteelblue;}
+  .listItem.selected { border: 1px solid green;}
+
+  textarea{width:45%;}

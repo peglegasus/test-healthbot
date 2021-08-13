@@ -1,0 +1,66 @@
+<!--
+    ______ _____    ______ 
+   / _____|____ \  / _____)
+  | /      _   \ \| /      
+  | |     | |   | | |      
+  | \_____| |__/ /| \_____ 
+   \______)_____/  \______)
+-->
+<html class="theme-blue">
+
+<head>
+
+	<meta charset="utf-8">
+	<title>Self Checker Tool</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="/css/main.css">
+	<link rel="stylesheet" href="/css/testHarness.css">
+	<script src="/js/testHarness.js"></script>
+
+</head>
+
+<body>
+
+	<div class="row">
+		<div id="root" class="column">
+			<img class="spinner" src="/images/spinner.gif" width="64" height="64" alt="Loading...">
+		</div>
+
+		<div class="column">
+			<div id="testPanel" class="testPanel">
+				<div>
+					<textarea name="testData" id="testData" rows="10">
+
+					</textarea>
+				</div>
+				<div>
+					<button id="doThings" onclick="loadTests();">Load Tests</button>
+					<span class='pathCount'></span>
+				</div>
+				<div>
+					<div class='pathList'>
+
+					</div>
+				</div>
+				<div>
+					<button id="runTests" onclick="runTests();">Run Tests</button>
+				</div>
+				<div>
+					<div class='taskList'>
+
+					</div>
+				</div>				
+			</div>
+		</div>
+	</div>
+
+	<script src="https://unpkg.com/adaptivecards/dist/adaptivecards.js"></script>
+	<script src="https://unpkg.com/markdown-it/dist/markdown-it.min.js"></script>
+	<script src="/js/jquery.min.js"></script>
+	<script src="/js/main.js"></script>
+
+</body>
+
+</html>
