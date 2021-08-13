@@ -274,9 +274,10 @@ var loadChatBot = ()=>{
 
 		const currentPrompt = card.dataType !== 'object' ? safelyConvertEval(card.dataType) : null;
 
-		let currentDomElement = $(`[id="${card.id}"]`);
-		currentDomElement = $(currentDomElement[currentDomElement.length - 1]).find('.chatbox-body');
-		currentDomElement.append(`${result}`);
+		const currentDomElement = $(`[id="${card.id}"]`);
+		const currentInnerDomElement = $(currentDomElement[currentDomElement.length - 1]).find('.chatbox-body');
+
+		currentInnerDomElement.append(`${result}`);
 
 		if (!scenario[card.variable]) {
 			scenario[card.variable] = {};
@@ -287,7 +288,7 @@ var loadChatBot = ()=>{
 			currentPrompt.map((prompt, index) => {
 				const $btn = $(`<button class="chatbox-btn" value="${index}">${prompt}</button>`);
 
-				currentDomElement.append($btn);
+				currentInnerDomElement.append($btn);
 
 				$btn.on('click', (event) => {
 					const target = $(event.target);
@@ -317,12 +318,12 @@ var loadChatBot = ()=>{
 						</label>
 					</div>
 				`);
-				currentDomElement.append($cbx);
+				currentInnerDomElement.append($cbx);
 			});
 
 			const $btn = $(`<button class="chatbox-btn">${scenario.dictionary.submit_button}</button>`);
 
-			currentDomElement.append($btn);
+			currentInnerDomElement.append($btn);
 
 			$btn.on('click', (event) => {
 				scenario[card.variable] = [];
@@ -348,7 +349,7 @@ var loadChatBot = ()=>{
 		} else if (card.attachment && card.attachment[0].type === 'AdaptiveCard') {
 
 			const adaptiveCard = processAdaptiveContent(card);
-			currentDomElement.append(adaptiveCard);
+			currentInnerDomElement.append(adaptiveCard);
 
 			// this is added in to trigger the scrolltobottom when the size of the card changes - the adaptive
 			// cards do some dynamic things that might affect their size. eg. ZIP Code card.
