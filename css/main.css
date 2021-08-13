@@ -61,6 +61,7 @@ button {
 #root button.disabled {
 	background-color: #999;
 	color: var(--black);
+	cursor: default;
 }
 /* Disabled buttons that have been clicked */
 #root button.disabled.is-clicked {

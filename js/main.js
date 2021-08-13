@@ -467,14 +467,14 @@ var loadChatBot = ()=>{
 		`);
 
 		if (!Array.isArray(scenario[card.variable])) {
-			$card.find('.chatbox-body').append(`<p>You said: ${target.text()}</p>`);
+			$card.find('.chatbox-body').append(`<p>${target.text()}</p>`);
 		} else {
 			let selected = [];
 			let checkedBoxes = document.getElementById(card.id).querySelectorAll('input:checked');
 			checkedBoxes.forEach((cbx, index) => {
 				selected.push($('label[for="' + cbx.id + '"]')[0].innerText);
 			});
-			$card.find('.chatbox-body').append(`<p>You said: ${selected.join(", ")}</p>`);
+			$card.find('.chatbox-body').append(`<p>${selected.join(", ")}</p>`);
 		}
 
 		$root.find('button, select').prop('disabled', true);
