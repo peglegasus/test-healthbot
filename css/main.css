@@ -6,6 +6,7 @@
 	--teal: #006778;
 	--white: #fff;
 	--light: #e6e6e6;
+	--gray: #c5c5c5;
 	--dark: #333;
 	--black: #000;
 }
@@ -59,7 +60,7 @@ button {
 
 /* Disabled buttons */
 #root button.disabled {
-	background-color: #999;
+	background-color: var(--gray);
 	color: var(--black);
 	cursor: default;
 }
