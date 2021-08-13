@@ -57,9 +57,15 @@ button {
 	padding: 10px;
 }
 
+/* Disabled buttons */
 #root button.disabled {
 	background-color: #999;
-	color:var(--black)
+	color: var(--black);
+}
+/* Disabled buttons that have been clicked */
+#root button.disabled.is-clicked {
+	background-color: var(--blue);
+	color: var(--white);
 }
 
 .spinner {

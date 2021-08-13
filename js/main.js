@@ -293,6 +293,7 @@ var loadChatBot = ()=>{
 					const target = $(event.target);
 
 					scenario[card.variable].index = parseInt(target.attr('value'));
+					$btn.addClass('is-clicked');
 
 					setTimeout(function () {
 						processUserResponse(card, target);
@@ -308,7 +309,14 @@ var loadChatBot = ()=>{
 
 			currentPrompt.map((prompt, index) => {
 				let valueString = "0" + (index + 1);
-				const $cbx = $(`<div style="display: flex; align-items: center;"><input id="${index}_${card.id}" type="checkbox" value="${valueString}" aria-label="${prompt}"><label class="" for="${index}_${card.id}"><p>${prompt}</p></label></div>`)
+				const $cbx = $(`
+					<div style="display: flex; align-items: center;">
+						<input id="${index}_${card.id}" type="checkbox" value="${valueString}" aria-label="${prompt}">
+						<label class="" for="${index}_${card.id}">
+							<p>${prompt}</p>
+						</label>
+					</div>
+				`);
 				currentDomElement.append($cbx);
 			});
 
