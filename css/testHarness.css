@@ -35,6 +35,15 @@
     margin:1px;
   }
 
+.status{
+  border: 1px solid black;
+  width:10px;
+  height: 10px;
+  display: inline-block;
+  margin:2px;
+}
+
+
   .listItem.light { background-color: white;}
   .listItem.dark { background-color:lightsteelblue;}
   .listItem.selected { border: 1px solid green;}
