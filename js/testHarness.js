@@ -2,6 +2,7 @@ var paths = [];
 var tasks = [];
 var pathIndex = 0;
 var taskIndex = 0;
+var running = true;
 
 var loadTests = () => {
 
@@ -25,19 +26,36 @@ var loadTests = () => {
 
     var band = true;
     paths.forEach(p => {
-        
-            var c = band ? "light" : "dark"; band = !band;
-            $(".pathList").append($("<div class='listItem " + c + "'><div class='status'></div>" + p + "</div>"));
-        
+
+        var c = band ? "light" : "dark"; band = !band;
+        $(".pathList").append($("<div class='listItem " + c + "'><div class='status'></div>" + p + "</div>"));
+
     });
+
+    function changeScenarioStart(event, scenario) {
+        console.log("getting scenario: "  + scenario.scenario);
+        var $scenDiv = $("<div class='scenarioTag working'>"+ scenario.scenario +"</div>");
+        $(".tasklist .working").parent().append($scenDiv);
+
+
+    }
+    function changeScenarioEnd(event, scenario) {
+        $(".scenarioTag.working").last().removeClass("working").addClass("completed");
+    }
+
+    $(document).bind('change_scenario_start', changeScenarioStart)
+    $(document).bind('change_scenario_end', changeScenarioEnd)
 
 }
 
-function runTests() {
+function pauseTests(){
+    running=false;
+}
 
-    //$(".listItem").removeClass("selected");
-    //$(".listItem:eq(0)").addClass("selected");
-    $(".pathList .listItem:eq("+ pathIndex +") .status").css("background-color","orange")
+
+function runTests() {
+    running=true;
+    $(".pathList .listItem:eq(" + pathIndex + ") .status").addClass("working");
     parseTest();
 
 }
@@ -57,7 +75,7 @@ function parseTest() {
     window.scenario = {};
 
     loadChatBot();
-    $(".taskList .listItem:eq("+ taskIndex +") .status").css("background-color","orange")
+    $(".taskList .listItem:eq(" + taskIndex + ") .status").addClass("working")
     setTimeout(function () {
         findNext();
     }, 5000);
@@ -66,20 +84,29 @@ function parseTest() {
 
 function findNext() {
 
+    if(!running){return;}
+
+    if (!tasks[taskIndex]) {
+        alert('here');
+    }
+
+    var taskCompleted = false;
+
+    // get elements for possible interaction
     var $cbxList = $("#root").find(':checkbox:enabled');
     var $opt = $("#root").find('select:enabled option[value="' + tasks[taskIndex] + '"]');
-
     var $btn = $("#root").find('button:enabled:contains("' + tasks[taskIndex] + '")');
-    if($btn.length==0){
+    if ($btn.length == 0) {
         $btn = $("#root").find('button:enabled:containsi("' + tasks[taskIndex] + '")') // case insensitive
     }
-    
-    var $input = $("#root").find('input:enabled');   
+    var $input = $("#root").find('input:text:enabled');
+
 
     if (tasks[taskIndex].toString().indexOf("MSG: ") > -1) {
         var txt = tasks[taskIndex].split("MSG: ")[1];
         if ($("#root").find("div:contains('" + unescape(txt) + "')").length > 0) {
-            console.log("found result MSG: " + unescape(txt));            
+            console.log("found result MSG: " + unescape(txt));
+            taskCompleted = true;
         }
     }
     else if ($cbxList.length > 0
@@ -88,37 +115,45 @@ function findNext() {
         selected.forEach((o, i) => {
             console.log("found '" + o + "' in checkbox list");
             $("#root").find(':checkbox:enabled[value="' + o + '"]').prop("checked", true);
+            taskCompleted = true;
         });
     }
     else if ($opt.length > 0) {
         console.log("found '" + tasks[taskIndex] + "' in select");
         $opt.prop('selected', true);
+        taskCompleted = true;
     }
     else if ($btn.length > 0) {
         console.log("found '" + tasks[taskIndex] + "' button");
         $btn.click()
+        taskCompleted = true;
     }
     else if ($input.length > 0) {
         $input.val(tasks[taskIndex]);
         $input.prop('disabled', true);
         console.log("found input for '" + tasks[taskIndex] + "'");
+        taskCompleted = true;
     }
     else {
-        if (taskIndex >= tasks.length - 1) {
+        if (taskIndex >= tasks.length - 1 || taskCompleted == false) {
             taskIndex = 0;
             tasks = [];
 
-            $(".pathList .listItem:eq("+ pathIndex +") .status").css("background-color","green")
+            if (taskCompleted) {
+                $(".pathList .listItem:eq(" + pathIndex + ") .status").removeClass("working").addClass("completed")
+            } else {
+                $(".pathList .listItem:eq(" + pathIndex + ") .status").removeClass("working").addClass("failed")
+            }
             pathIndex += 1;
             runTests();
             return;
         }
     }
 
-    $(".taskList .listItem:eq("+ taskIndex +") .status").css("background-color","green")
+    $(".taskList .listItem:eq(" + taskIndex + ") .status").removeClass("working").addClass("completed");
 
     taskIndex += 1;
-    $(".taskList .listItem:eq("+ taskIndex +") .status").css("background-color","orange")
+    $(".taskList .listItem:eq(" + taskIndex + ") .status").addClass("working")
     setTimeout(function () {
         findNext();
     }, 5000);
