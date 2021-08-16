@@ -9,6 +9,11 @@
 	--gray: #c5c5c5;
 	--dark: #333;
 	--black: #000;
+
+	--unit: 1rem;
+	--spacer: 0.9375rem; /* 15px */
+
+	--font-family: Calibri, "Helvetica Neue", Arial, sans-serif;
 }
 
 html {
@@ -22,16 +27,16 @@ html {
 }
 
 body {
-	font-family: 'Open Sans', sans-serif;
-	font-size: 1rem;
+	font-family: var(--font-family);
+	font-size: var(--unit);
 	line-height: 1.45;
 	margin: 0;
 }
 
 h1, h2, h3, h4, h5, h6 {
 	font-weight: 700;
-	margin-bottom: 1rem;
-	margin-top: 1rem;
+	margin-bottom: var(--unit);
+	margin-top: var(--unit);
 }
 
 ul {
@@ -40,6 +45,7 @@ ul {
 
 button {
 	cursor: pointer;
+	font-family: var(--font-family);
 	font-size: inherit;
 }
 
@@ -61,7 +67,7 @@ button {
 /* Disabled buttons */
 #root button.disabled {
 	background-color: var(--gray);
-	color: var(--black);
+	color: var(--dark);
 	cursor: default;
 }
 /* Disabled buttons that have been clicked */
@@ -124,8 +130,13 @@ button {
     border: 1px solid;
     border-color: var(--light);
     border-radius: 2px;
-    padding: 10px;
+    padding: var(--spacer);
     position: relative;
+}
+.chatbox--response .chatbox-body {
+	background-color: var(--black);
+	color: var(--white);
+	padding: 10px;
 }
 .chatbox-body :first-child {
 	margin-top: 0;
@@ -138,12 +149,17 @@ button {
 	margin-left: 10px;
 }
 
+.chatbox-body + .chatbox-body {
+	margin-top: 10px;
+}
+
 .chatbox-btn,
 .ac-pushButton {
 	background-color: var(--white);
     border-style: solid;
 	border-width: 1px;
 	color: var(--blue);
+	font-weight: 600;
 	display: block;
 	outline: 2px solid transparent;
 	padding: 10px 16px;
