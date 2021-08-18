@@ -19,7 +19,7 @@ var loadChatBot = ()=>{
 		covid19_vax_core: "/js/covid_19_core_vaccinated_protocol.json",
 		covid19_core_pediatric: "/js/covid_19_core_pediatric_protocol.json",
 		covid19_core_asymptomatic: "/js/covid_19_core_asymptomatic_protocol.json",
-		covid19_ux_core: "covid_19_core_ux.json"	
+		covid19_ux_core: "/js/covid_19_core_ux.json"	
 	}
 
 	// Flag to turn on/off development mode

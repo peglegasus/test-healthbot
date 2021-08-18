@@ -19,6 +19,10 @@ var loadTests = () => {
     data = data.replace(/\t/g, '');
 
     paths = [];
+    tasks = [];
+    pathIndex = 0;
+    taskIndex = 0;
+
     paths = data.split("\n")
     paths = paths.filter(e => e);
 
@@ -114,9 +118,10 @@ function findNext() {
         var selected = tasks[taskIndex].split(",");
         selected.forEach((o, i) => {
             console.log("found '" + o + "' in checkbox list");
-            $("#root").find(':checkbox:enabled[value="' + o + '"]').prop("checked", true);
-            taskCompleted = true;
+            $("#root").find(':checkbox:enabled[value="' + o + '"]').prop("checked", true);            
         });
+        $cbxList.prop('disabled', true);
+        taskCompleted = true;
     }
     else if ($opt.length > 0) {
         console.log("found '" + tasks[taskIndex] + "' in select");
@@ -134,27 +139,39 @@ function findNext() {
         console.log("found input for '" + tasks[taskIndex] + "'");
         taskCompleted = true;
     }
-    else {
-        if (taskIndex >= tasks.length - 1 || taskCompleted == false) {
-            taskIndex = 0;
-            tasks = [];
 
+    if(taskCompleted){
+        $(".taskList .listItem:eq(" + taskIndex + ") .status").removeClass("working").addClass("completed");
+        taskIndex += 1;
+        if (!tasks[taskIndex]){ // done with this test
             if (taskCompleted) {
-                $(".pathList .listItem:eq(" + pathIndex + ") .status").removeClass("working").addClass("completed")
+                $(".pathList .listItem:eq(" + pathIndex + ") .status").removeClass("working").addClass("completed").off()
             } else {
-                $(".pathList .listItem:eq(" + pathIndex + ") .status").removeClass("working").addClass("failed")
+                $(".pathList .listItem:eq(" + pathIndex + ") .status").removeClass("working").addClass("failed").off().on('click',function(){
+                    taskIndex = 0;        
+                    runTests();
+                    return;
+                });
+                return;
             }
+            taskIndex = 0;
             pathIndex += 1;
             runTests();
             return;
-        }
+        }    
+    } else {
+        $(".taskList .listItem:eq(" + taskIndex + ") .status").removeClass("working").addClass("failed");
+        $(".pathList .listItem:eq(" + pathIndex + ") .status").removeClass("working").addClass("failed").off().on('click',function(){
+            taskIndex = 0;        
+            runTests();
+            return;
+        });
     }
 
-    $(".taskList .listItem:eq(" + taskIndex + ") .status").removeClass("working").addClass("completed");
-
-    taskIndex += 1;
-    $(".taskList .listItem:eq(" + taskIndex + ") .status").addClass("working")
+    $(".taskList .listItem:eq(" + taskIndex + ") .status").addClass("working");    
+ 
     setTimeout(function () {
+        
         findNext();
     }, 5000);
 }
