@@ -1,4 +1,4 @@
-**[08/01/2021] This repo has moved under CDC's private repository and is no longer supprted/maintained.**
+**[08/01/2021] This repo has moved under CDC's private repository and is no longer supported/maintained.**
 
 # test-healthbot
 
